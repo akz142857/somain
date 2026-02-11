@@ -198,6 +198,12 @@ const handleAddMonitor = async () => {
   color: var(--color-primary);
 }
 
+.btn-active {
+  background: #e6f7ff;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .btn-primary {
   background: var(--color-primary);
   color: white;

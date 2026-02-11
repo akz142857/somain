@@ -62,6 +62,20 @@ onMounted(async () => {
 onUnmounted(() => {
     stopSimulation();
 });
+
+// Agent Integration
+import { useAgentContext } from '../composables/useAgentContext';
+const { setContext } = useAgentContext();
+
+// Set initial project context
+watch(activeProjectId, (newId) => {
+  setContext({ type: 'project', id: newId, name: newId === 'p1' ? 'E-Commerce Platform' : 'Internal Tools' });
+}, { immediate: true });
+
+const handleAskAgent = (monitor: Monitor) => {
+  setContext({ type: 'monitor', id: monitor.id, name: (monitor as any).name || t(monitor.nameKey) });
+  // Optionally open agent panel if it was collapsible (it's fixed now)
+};
 </script>
 
 <template>

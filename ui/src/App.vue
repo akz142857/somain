@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Sidebar from './components/Sidebar.vue';
 import TopBar from './components/TopBar.vue';
+import AgentPanel from './components/AgentPanel.vue';
 import Dashboard from './views/Dashboard.vue';
 import { useI18n } from 'vue-i18n';
 import { onMounted } from 'vue';
@@ -31,14 +32,17 @@ onMounted(() => {
         <Dashboard />
       </div>
     </div>
+    <AgentPanel />
   </div>
 </template>
 
 <style scoped>
 .main {
   margin-left: var(--sidebar-width);
+  margin-right: 350px; /* Width of Agent Panel */
   padding: 0;
   min-height: 100vh;
+  transition: margin-right 0.3s;
 }
 
 .content {

@@ -21,10 +21,14 @@ const props = defineProps<{
   isExpanded?: boolean;
 }>();
 
-const emit = defineEmits(['toggle']);
+const emit = defineEmits(['toggle', 'ask-agent']);
 
 const { t } = useI18n();
 const activeTab = ref('events');
+
+const handleAskAgent = () => {
+  emit('ask-agent', props.monitor);
+};
 
 const statusText = computed(() => {
   switch (props.monitor.status) {
@@ -96,6 +100,12 @@ const switchTab = (tab: string, event: Event) => {
           @click="activeTab = 'config'"
         >
           {{ t('tab.config') }}
+        </div>
+        
+        <div class="header-actions">
+           <button class="btn-icon" @click.stop="handleAskAgent" title="Ask Agent">
+              <span class="icon">🤖</span>
+           </button>
         </div>
       </div>
 
@@ -369,4 +379,31 @@ const switchTab = (tab: string, event: Event) => {
 .config-row {
   display: flex;
   justify-content: space-between;
-}</style>
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.btn-icon {
+  background: #f0f7ff;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--color-primary);
+}
+
+.btn-icon:hover {
+  background: var(--color-primary);
+  color: white;
+  transform: scale(1.1);
+}
+</style>
