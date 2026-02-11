@@ -1,3 +1,4 @@
+<script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAgentContext } from '../composables/useAgentContext';
@@ -207,31 +208,34 @@ const handleRemoveContext = () => {
            </button>
         </div>
 
-        <!-- Suggestions Popup -->
-        <div v-if="showSuggestions && filteredSuggestions.length > 0" class="suggestions-popup">
-          <div 
-            v-for="(item, idx) in filteredSuggestions" 
-            :key="item.id" 
-            class="suggestion-item"
-            :class="{ active: idx === activeSuggestionIndex }"
-            @click="selectSuggestion(item)"
-          >
-            <div class="suggestion-icon">{{ suggestionType === 'monitor' ? '🔍' : '🛠️' }}</div>
-            <div class="suggestion-info">
-              <div class="suggestion-name">{{ item.name }}</div>
-              <div v-if="(item as any).desc" class="suggestion-desc">{{ (item as any).desc }}</div>
+        <div class="input-wrapper">
+          <!-- Suggestions Popup -->
+          <div v-if="showSuggestions && filteredSuggestions.length > 0" class="suggestions-popup">
+            <div 
+              v-for="(item, idx) in filteredSuggestions" 
+              :key="item.id" 
+              class="suggestion-item"
+              :class="{ active: idx === activeSuggestionIndex }"
+              @click="selectSuggestion(item)"
+            >
+              <div class="suggestion-icon">{{ suggestionType === 'monitor' ? '🔍' : '🛠️' }}</div>
+              <div class="suggestion-info">
+                <div class="suggestion-name">{{ item.name }}</div>
+                <div v-if="(item as any).desc" class="suggestion-desc">{{ (item as any).desc }}</div>
+              </div>
             </div>
           </div>
+
+          <textarea 
+            ref="inputRef"
+            v-model="inputMessage"
+            class="chat-input"
+            :placeholder="t('agent.placeholder', 'Ask anything...')"
+            @keydown="handleKeydown"
+            @input="handleInput"
+          ></textarea>
         </div>
 
-        <textarea 
-          ref="inputRef"
-          v-model="inputMessage"
-          class="chat-input"
-          :placeholder="t('agent.placeholder', 'Ask anything...')"
-          @keydown="handleKeydown"
-          @input="handleInput"
-        ></textarea>
         <div class="input-actions">
            <button class="send-btn" @click="handleSend" :disabled="!inputMessage.trim()">
              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
@@ -248,14 +252,18 @@ const handleRemoveContext = () => {
   padding: 16px;
   background: white;
   border-top: 1px solid #f0f0f0;
-  position: relative; /* For popup positioning */
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
 }
 
 .suggestions-popup {
   position: absolute;
   bottom: 100%;
-  left: 16px;
-  width: 300px;
+  left: 0;
+  width: 100%;
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
