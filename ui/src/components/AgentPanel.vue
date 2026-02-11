@@ -185,11 +185,6 @@ const handleRemoveContext = () => {
       </div>
 
       <div class="chat-input-area">
-        <div class="tools-row">
-          <button class="tool-btn" title="Analyze Logs">📊</button>
-          <button class="tool-btn" title="Check Health">🏥</button>
-          <button class="tool-btn" title="Settings">⚙️</button>
-        </div>
         
         <div class="input-context-actions">
            <div v-if="isContextShared" class="context-chip">
