@@ -2,11 +2,14 @@
 import Sidebar from './components/Sidebar.vue';
 import TopBar from './components/TopBar.vue';
 import AgentPanel from './components/AgentPanel.vue';
-import Dashboard from './views/Dashboard.vue';
 import { useI18n } from 'vue-i18n';
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 
 const { locale } = useI18n();
+const route = useRoute();
+
+const isFlowDetail = computed(() => route.name === 'detail');
 
 const toggleLanguage = () => {
   locale.value = locale.value === 'en' ? 'zh' : 'en';
@@ -26,13 +29,13 @@ onMounted(() => {
 <template>
   <div class="app-layout">
     <Sidebar />
-    <div class="main">
+    <div class="main" :class="{ 'full-width': isFlowDetail }">
       <TopBar />
       <div class="content">
-        <Dashboard />
+        <router-view />
       </div>
     </div>
-    <AgentPanel />
+    <AgentPanel v-if="!isFlowDetail" />
   </div>
 </template>
 
@@ -43,6 +46,10 @@ onMounted(() => {
   padding: 0;
   min-height: 100vh;
   transition: margin-right 0.3s;
+}
+
+.main.full-width {
+  margin-right: 0;
 }
 
 .content {

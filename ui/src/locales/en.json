@@ -43,5 +43,27 @@
         "apiGateway": "API Gateway",
         "rabbitmq": "RabbitMQ",
         "orderFlow": "Order Flow"
+    },
+    "flow": {
+        "backToDashboard": "Back to Dashboard",
+        "viewDetail": "View Detail",
+        "metricsTitle": "Metrics Summary",
+        "steps": "Steps",
+        "flowTitle": "Flow Visualization",
+        "stepDetail": "Step Detail",
+        "endpoint": "Endpoint",
+        "duration": "Duration",
+        "threshold": "Threshold",
+        "startedAt": "Started",
+        "retries": "Retries",
+        "throughput": "Throughput",
+        "p99": "P99",
+        "error": "Error",
+        "eventsTitle": "Events",
+        "filterAll": "All",
+        "filterErrors": "Errors",
+        "agentTitle": "Agent Analysis",
+        "selectStep": "Click a step to view details",
+        "noEvents": "No events"
     }
 }

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import AgentView from './AgentView.vue';
-import BusinessFlow from './BusinessFlow.vue';
+
+const router = useRouter();
 
 const props = defineProps<{
   monitor: {
@@ -23,14 +25,10 @@ const props = defineProps<{
   isExpanded?: boolean;
 }>();
 
-const emit = defineEmits(['toggle', 'ask-agent']);
+const emit = defineEmits(['toggle']);
 
 const { t } = useI18n();
-const activeTab = ref(props.monitor.flowSteps ? 'flow' : 'events');
-
-const handleAskAgent = () => {
-  emit('ask-agent', props.monitor);
-};
+const activeTab = ref('events');
 
 const statusText = computed(() => {
   switch (props.monitor.status) {
@@ -82,49 +80,36 @@ const switchTab = (tab: string, event: Event) => {
     <!-- Expanded Details -->
     <div v-if="props.isExpanded" class="card-detail" @click.stop>
       <div class="detail-tabs">
-        <div 
-          v-if="monitor.flowSteps"
-          class="tab-item" 
-          :class="{ active: activeTab === 'flow' }"
-          @click="activeTab = 'flow'"
-        >
-          Flow
-        </div>
-        <div 
-          class="tab-item" 
+        <div
+          class="tab-item"
           :class="{ active: activeTab === 'events' }"
           @click="activeTab = 'events'"
         >
           {{ t('tab.events') }}
         </div>
-        <div 
-          class="tab-item" 
+        <div
+          class="tab-item"
           :class="{ active: activeTab === 'agent' }"
           @click="activeTab = 'agent'"
         >
           {{ t('tab.agent') }}
         </div>
-        <div 
-          class="tab-item" 
+        <div
+          class="tab-item"
           :class="{ active: activeTab === 'config' }"
           @click="activeTab = 'config'"
         >
           {{ t('tab.config') }}
         </div>
-        
-        <div class="header-actions">
-           <button class="btn-icon" @click.stop="handleAskAgent" title="Ask Agent">
-              <span class="icon">🤖</span>
-           </button>
+        <div
+          class="tab-item tab-detail"
+          @click="router.push({ name: 'detail', params: { monitorId: monitor.id } })"
+        >
+          {{ t('flow.viewDetail') }} →
         </div>
       </div>
 
       <div class="tab-content">
-        <!-- Flow Tab -->
-        <div v-if="activeTab === 'flow' && monitor.flowSteps" class="flow-pane">
-            <BusinessFlow :steps="monitor.flowSteps" />
-        </div>
-
         <!-- Agent Tab -->
         <AgentView 
           v-if="activeTab === 'agent' && monitor.agent"
@@ -396,33 +381,15 @@ const switchTab = (tab: string, event: Event) => {
   justify-content: space-between;
 }
 
-.flow-pane {
-  padding: 8px 0;
-}
-
-.header-actions {
+.tab-detail {
   margin-left: auto;
-  display: flex;
-  align-items: center;
+  color: var(--color-primary) !important;
+  font-weight: 500;
+  border-bottom: none !important;
 }
 
-.btn-icon {
-  background: #f0f7ff;
-  border: none;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: var(--color-primary);
+.tab-detail:hover {
+  opacity: 0.8;
 }
 
-.btn-icon:hover {
-  background: var(--color-primary);
-  color: white;
-  transform: scale(1.1);
-}
 </style>

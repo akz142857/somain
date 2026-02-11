@@ -2,22 +2,31 @@
   "hash": "3e51456e",
   "configHash": "fa9ab453",
   "lockfileHash": "e3b0c442",
-  "browserHash": "3ca1c41f",
+  "browserHash": "700181f1",
   "optimized": {
     "vue": {
       "src": "../../node_modules/.deno/vue@3.5.23/node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "1d67410d",
+      "fileHash": "5b19c802",
       "needsInterop": false
     },
     "vue-i18n": {
       "src": "../../node_modules/.deno/vue-i18n@9.14.5/node_modules/vue-i18n/dist/vue-i18n.mjs",
       "file": "vue-i18n.js",
-      "fileHash": "2e268433",
+      "fileHash": "1fbafa0f",
+      "needsInterop": false
+    },
+    "vue-router": {
+      "src": "../../node_modules/.deno/vue-router@4.6.3/node_modules/vue-router/dist/vue-router.mjs",
+      "file": "vue-router.js",
+      "fileHash": "d5253791",
       "needsInterop": false
     }
   },
   "chunks": {
+    "chunk-PVU3EYJK": {
+      "file": "chunk-PVU3EYJK.js"
+    },
     "chunk-IJL6J2UP": {
       "file": "chunk-IJL6J2UP.js"
     }

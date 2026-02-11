@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/ziy/Code/Somain/Somain log --oneline -15)",
+      "Bash(git -C /Users/ziy/Code/Somain/Somain branch -a)",
+      "Bash(deno task:*)"
+    ]
+  }
+}

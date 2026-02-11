@@ -129,12 +129,18 @@ export const useMockService = () => {
         }
     };
 
+    const getMonitorById = (id: string): Monitor | undefined => {
+        return infrastructureForSim.value.find(m => m.id === id)
+            || businessForSim.value.find(m => m.id === id);
+    };
+
     return {
         getInfrastructure,
         getBusiness,
         getProjects,
         addProject,
         addMonitor,
+        getMonitorById,
         startSimulation,
         stopSimulation
     };

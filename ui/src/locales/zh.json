@@ -43,5 +43,27 @@
         "apiGateway": "API 网关",
         "rabbitmq": "RabbitMQ",
         "orderFlow": "订单流程"
+    },
+    "flow": {
+        "backToDashboard": "返回仪表盘",
+        "viewDetail": "查看详情",
+        "metricsTitle": "指标概览",
+        "steps": "步骤",
+        "flowTitle": "流程可视化",
+        "stepDetail": "步骤详情",
+        "endpoint": "端点",
+        "duration": "耗时",
+        "threshold": "阈值",
+        "startedAt": "开始时间",
+        "retries": "重试次数",
+        "throughput": "吞吐量",
+        "p99": "P99",
+        "error": "错误",
+        "eventsTitle": "事件",
+        "filterAll": "全部",
+        "filterErrors": "仅错误",
+        "agentTitle": "Agent 分析",
+        "selectStep": "点击步骤查看详情",
+        "noEvents": "暂无事件"
     }
 }
