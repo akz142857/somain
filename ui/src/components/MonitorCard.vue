@@ -18,10 +18,12 @@ const props = defineProps<{
       rootCause?: { title: string; desc: string; confidence?: string };
     };
   };
+  isExpanded?: boolean;
 }>();
 
+const emit = defineEmits(['toggle']);
+
 const { t } = useI18n();
-const isExpanded = ref(false);
 const activeTab = ref('events');
 
 const statusText = computed(() => {
@@ -34,7 +36,7 @@ const statusText = computed(() => {
 });
 
 const toggleDetail = () => {
-  isExpanded.value = !isExpanded.value;
+  emit('toggle');
 };
 
 const switchTab = (tab: string, event: Event) => {

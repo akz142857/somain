@@ -18,6 +18,7 @@ const isSimulating = ref(false);
 const isLoading = ref(true);
 
 const selectedMonitor = ref<Monitor | null>(null);
+const expandedMonitorId = ref<string | null>(null);
 
 const toggleSimulation = () => {
   if (isSimulating.value) {
@@ -44,6 +45,10 @@ const fetchData = async () => {
 
 const handleSelectMonitor = (monitor: Monitor) => {
     selectedMonitor.value = monitor;
+};
+
+const handleToggleMonitor = (id: string) => {
+  expandedMonitorId.value = expandedMonitorId.value === id ? null : id;
 };
 
 watch(activeProjectId, () => {
@@ -94,7 +99,8 @@ onUnmounted(() => {
         v-for="m in infrastructureMonitors"
         :key="m.id"
         :monitor="m as any"
-        @select="handleSelectMonitor"
+        :is-expanded="expandedMonitorId === m.id"
+        @toggle="handleToggleMonitor(m.id)"
       />
     </div>
   </div>
@@ -127,7 +133,8 @@ onUnmounted(() => {
         v-for="m in businessMonitors"
         :key="m.id"
         :monitor="m as any"
-        @select="handleSelectMonitor"
+        :is-expanded="expandedMonitorId === m.id"
+        @toggle="handleToggleMonitor(m.id)"
       />
     </div>
   </div>
