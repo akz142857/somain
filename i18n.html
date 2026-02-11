@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-primary: #1890ff;
+            --color-success: #52c41a;
+            --color-warning: #faad14;
+            --color-error: #ff4d4f;
+            --color-text: #262626;
+            --color-text-secondary: #8c8c8c;
+            --color-border: #e8e8e8;
+            --color-bg: #f5f5f5;
+            --sidebar-width: 200px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            direction: ltr;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: #1f1f1f;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            padding: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--color-primary);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .project-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .project-item:hover {
+            background: #2a2a2a;
+        }
+
+        .project-item.active {
+            background: var(--color-primary);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-success);
+            flex-shrink: 0;
+        }
+
+        .status-dot.error {
+            background: var(--color-error);
+        }
+
+        .status-dot.warning {
+            background: var(--color-warning);
+        }
+
+        .add-btn {
+            margin: 16px;
+            padding: 10px;
+            background: transparent;
+            border: 1px dashed #555;
+            color: #999;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .add-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        /* 主区域 */
+        .main {
+            margin-left: var(--sidebar-width);
+            padding: 0;
+        }
+
+        .topbar {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .project-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search {
+            position: relative;
+        }
+
+        .search input {
+            width: 280px;
+            padding: 6px 12px 6px 36px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .search input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            opacity: 0.5;
+        }
+
+        .btn {
+            padding: 6px 16px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+
+        /* 内容区 */
+        .content {
+            padding: 20px 24px;
+        }
+
+        /* 监控组 */
+        .monitor-group {
+            margin-bottom: 32px;
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .group-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .group-count {
+            color: var(--color-text-secondary);
+            font-weight: normal;
+            margin-left: 8px;
+        }
+
+        .group-filter {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-tag {
+            padding: 4px 12px;
+            background: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .filter-tag:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .filter-tag.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        /* 监控卡片网格 */
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 16px;
+        }
+
+        .monitor-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--color-border);
+        }
+
+        .monitor-card:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+        }
+
+        .monitor-card.error {
+            border-color: var(--color-error);
+            background: #fff1f0;
+        }
+
+        .monitor-card.warning {
+            border-color: var(--color-warning);
+            background: #fffbe6;
+        }
+
+        .monitor-card.slow {
+            border-color: #ff9500;
+            background: #fff8e6;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: #f0f0f0;
+            flex-shrink: 0;
+        }
+
+        /* SVG 图标 */
+        .icon-api {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .icon-db {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .icon-mq {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .icon-cache {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .icon-search {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .icon-order {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        .monitor-card.error .card-icon {
+            background: var(--color-error);
+            color: white;
+        }
+
+        .card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-desc {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-status {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .card-status.ok {
+            background: #f6ffed;
+            color: var(--color-success);
+        }
+
+        .card-status.error {
+            background: #fff1f0;
+            color: var(--color-error);
+        }
+
+        .card-status.slow {
+            background: #fff8e6;
+            color: #ff9500;
+        }
+
+        .status-bar {
+            height: 24px;
+            display: flex;
+            gap: 2px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .bar-seg {
+            flex: 1;
+        }
+
+        .bar-seg.ok {
+            background: var(--color-success);
+        }
+
+        .bar-seg.error {
+            background: var(--color-error);
+        }
+
+        .bar-seg.slow {
+            background: #ff9500;
+        }
+
+        .card-metrics {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .metric {
+            text-align: center;
+            flex: 1;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-value.good {
+            color: var(--color-success);
+        }
+
+        .metric-value.bad {
+            color: var(--color-error);
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--color-text-secondary);
+        }
+
+        /* 详情区 */
+        .card-detail {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--color-border);
+            display: none;
+        }
+
+        .card-detail.show {
+            display: block;
+        }
+
+        .detail-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .detail-tab {
+            padding: 4px 0;
+            cursor: pointer;
+            font-size: 12px;
+            color: #595959;
+            border-bottom: 2px solid transparent;
+        }
+
+        .detail-tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+            font-weight: 500;
+        }
+
+        /* Agent AI View Styles */
+        .agent-view {
+            background: #f8faff;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #e6f0ff;
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .agent-pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            animation: agent-pulse-blue 2s infinite;
+        }
+
+        @keyframes agent-pulse-blue {
+            0% {
+                box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+            }
+        }
+
+        .agent-step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e6f0ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-primary);
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .step-desc {
+            color: var(--color-text-secondary);
+            font-size: 12px;
+        }
+
+        .root-cause-box {
+            background: #fff1f0;
+            border-left: 4px solid var(--color-error);
+            padding: 12px;
+            margin: 16px 0;
+            border-radius: 4px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--color-primary);
+            color: var(--color-primary);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-ghost:hover {
+            background: #e6f0ff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.show {
+            display: block;
+        }
+
+        .event-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 12px;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-time {
+            color: var(--color-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .event-msg {
+            color: var(--color-text);
+        }
+
+        .event-id {
+            color: var(--color-primary);
+            cursor: pointer;
+            font-family: monospace;
+            margin-right: 6px;
+        }
+
+        .flow-trace {
+            margin-top: 4px;
+            color: #595959;
+            font-size: 11px;
+        }
+
+        .flow-step {
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .flow-step.ok::before {
+            content: '✓';
+            color: var(--color-success);
+            margin-right: 2px;
+        }
+
+        .flow-step.error::before {
+            content: '✗';
+            color: var(--color-error);
+            margin-right: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">M</div><span class="logo-text" data-i18n="app.name">Monitor</span>
+        </div>
+        <div class="project-item active">
+            <span class="status-dot error"></span>
+            <span data-i18n="project.ecommerce">E-Commerce</span>
+        </div>
+        <div class="project-item">
+            <span class="status-dot"></span>
+            <span data-i18n="project.payment">Payment</span>
+        </div>
+        <div class="project-item">
+            <span class="status-dot warning"></span>
+            <span data-i18n="project.user">User Center</span>
+        </div>
+        <button class="add-btn" data-i18n="action.newProject">New Project</button>
+    </div>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="project-name" data-i18n="project.ecommerce">E-Commerce</div>
+            <div class="topbar-actions">
+                <div class="search">
+                    <svg class="search-icon" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                    </svg>
+                    <input type="text" data-i18n-placeholder="action.search">
+                </div>
+                <button class="btn" data-i18n="action.settings">Settings</button>
+                <button class="btn btn-primary" data-i18n="action.newMonitor">+ New Monitor</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="monitor-group">
+                <div class="group-header">
+                    <div class="group-title"><span data-i18n="section.infrastructure">Infrastructure</span> <span
+                            class="group-count">(7)</span></div>
+                </div>
+                <div class="monitor-grid">
+                    <!-- API Gateway -->
+                    <div class="monitor-card" onclick="toggleDetail(this)">
+                        <div class="card-header">
+                            <div class="card-icon icon-api"><svg width="20" height="20" viewBox="0 0 24 24"
+                                    fill="white">
+                                    <path
+                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                                </svg></div>
+                            <div class="card-info">
+                                <div class="card-name" data-i18n="monitor.apiGateway">API Gateway</div>
+                                <div class="card-desc">https://api.example.com</div>
+                            </div>
+                            <div class="card-status ok" data-i18n="status.normal">Normal</div>
+                        </div>
+                        <div class="status-bar">
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-value good">99.9%</div>
+                                <div class="metric-label" data-i18n="metric.uptime">Uptime</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value">45ms</div>
+                                <div class="metric-label" data-i18n="metric.latency">Latency</div>
+                            </div>
+                        </div>
+                        <div class="card-detail">
+                            <div class="detail-tabs">
+                                <div class="detail-tab active" data-i18n="tab.events"
+                                    onclick="switchDetailTab(this, 'events')">Recent Events</div>
+                                <div class="detail-tab" data-i18n="tab.config"
+                                    onclick="switchDetailTab(this, 'config')">Config</div>
+                            </div>
+                            <div class="detail-content-wrapper">
+                                <div class="tab-content events show">
+                                    <div class="event-list">
+                                        <div class="event-item">
+                                            <div class="event-time">Just now</div>
+                                            <div class="event-msg">Healthy check passed</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-content config">
+                                    <div style="padding:12px; font-size:12px; color:#666">Config data...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RabbitMQ -->
+                    <div class="monitor-card error" onclick="toggleDetail(this)">
+                        <div class="card-header">
+                            <div class="card-icon icon-mq"><svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                                    <path
+                                        d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                                </svg></div>
+                            <div class="card-info">
+                                <div class="card-name" data-i18n="monitor.rabbitmq">RabbitMQ</div>
+                                <div class="card-desc">192.168.1.102:5672</div>
+                            </div>
+                            <div class="card-status error" data-i18n="status.error">Error</div>
+                        </div>
+                        <div class="status-bar">
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg error"></div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-value bad">20%</div>
+                                <div class="metric-label" data-i18n="metric.uptime">Uptime</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value bad" data-i18n="value.timeout">Timeout</div>
+                                <div class="metric-label" data-i18n="metric.latency">Latency</div>
+                            </div>
+                        </div>
+                        <div class="card-detail">
+                            <div class="detail-tabs">
+                                <div class="detail-tab active" data-i18n="tab.events"
+                                    onclick="switchDetailTab(this, 'events')">Recent Events</div>
+                                <div class="detail-tab" data-i18n="tab.agent" onclick="switchDetailTab(this, 'agent')">
+                                    Agent AI</div>
+                                <div class="detail-tab" data-i18n="tab.config"
+                                    onclick="switchDetailTab(this, 'config')">Config</div>
+                            </div>
+                            <div class="detail-content-wrapper">
+                                <div class="tab-content events show">
+                                    <div class="event-list">
+                                        <div class="event-item">
+                                            <div class="event-time">Just now</div>
+                                            <div class="event-msg">Connection refused</div>
+                                        </div>
+                                        <div class="event-item">
+                                            <div class="event-time">30s ago</div>
+                                            <div class="event-msg">Connection refused</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-content agent">
+                                    <div class="agent-view">
+                                        <div class="agent-header">
+                                            <div class="agent-pulse"></div><span data-i18n="tab.agent">Agent AI</span>
+                                        </div>
+                                        <div class="agent-step">
+                                            <div class="step-icon">1</div>
+                                            <div class="step-content">
+                                                <div class="step-title">Analyzing Connectivity</div>
+                                                <div class="step-desc">TCP refused. Checking Kubernetes status...</div>
+                                            </div>
+                                        </div>
+                                        <div class="root-cause-box">
+                                            <div style="font-weight:600; margin-bottom:4px">Root Cause (95% Confidence)
+                                            </div>
+                                            <div style="font-size:13px">Process killed by OOM (Out of Memory). Recent
+                                                usage spiked to 8GB.</div>
+                                        </div>
+                                        <div class="action-btns">
+                                            <button class="btn-primary btn"
+                                                style="font-size:12px; padding:4px 12px">Restart Service</button>
+                                            <button class="btn-ghost">View Dump</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-content config">
+                                    <div style="padding:12px; font-size:12px; color:#666">Config...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ES Slow -->
+                    <div class="monitor-card slow" onclick="toggleDetail(this)">
+                        <div class="card-header">
+                            <div class="card-icon icon-search"><svg width="20" height="20" viewBox="0 0 24 24"
+                                    fill="white">
+                                    <path
+                                        d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                </svg></div>
+                            <div class="card-info">
+                                <div class="card-name">ElasticSearch</div>
+                                <div class="card-desc">192.168.1.103:9200</div>
+                            </div>
+                            <div class="card-status slow" data-i18n="status.slow">Slow</div>
+                        </div>
+                        <div class="status-bar">
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg slow"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg slow"></div>
+                            <div class="bar-seg slow"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg slow"></div>
+                            <div class="bar-seg ok"></div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-value good">100%</div>
+                                <div class="metric-label" data-i18n="metric.uptime">Uptime</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value bad">850ms</div>
+                                <div class="metric-label" data-i18n="metric.latency">Latency</div>
+                            </div>
+                        </div>
+                        <div class="card-detail">
+                            <div class="detail-tabs">
+                                <div class="detail-tab active" data-i18n="tab.events"
+                                    onclick="switchDetailTab(this, 'events')">Recent Events</div>
+                                <div class="detail-tab" data-i18n="tab.agent" onclick="switchDetailTab(this, 'agent')">
+                                    Agent AI</div>
+                            </div>
+                            <div class="detail-content-wrapper">
+                                <div class="tab-content events show">
+                                    <div class="event-list">
+                                        <div class="event-item">
+                                            <div class="event-time">刚刚</div>
+                                            <div class="event-msg">Latency high (850ms)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-content agent">
+                                    <div class="agent-view">
+                                        <div class="agent-header">
+                                            <div class="agent-pulse"></div><span>Agent Analysis</span>
+                                        </div>
+                                        <div class="root-cause-box"
+                                            style="border-left-color:var(--color-warning); background:#fffbe6">
+                                            <div style="font-weight:600; color:var(--color-warning)">Observation</div>
+                                            <div style="font-size:13px">Large shard relocation in progress on node
+                                                es-01.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="monitor-group">
+                <div class="group-header">
+                    <div class="group-title"><span data-i18n="section.businessFlow">Business Flow</span> <span
+                            class="group-count">(3)</span></div>
+                </div>
+                <div class="monitor-grid">
+                    <!-- Order Flow -->
+                    <div class="monitor-card error" onclick="toggleDetail(this)">
+                        <div class="card-header">
+                            <div class="card-icon icon-order"><svg width="20" height="20" viewBox="0 0 24 24"
+                                    fill="white">
+                                    <path
+                                        d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                                </svg></div>
+                            <div class="card-info">
+                                <div class="card-name" data-i18n="monitor.orderFlow">Order Flow</div>
+                                <div class="card-desc">Create → Stock → Pay → Callback</div>
+                            </div>
+                            <div class="card-status error" data-i18n="status.error">Error</div>
+                        </div>
+                        <div class="status-bar">
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg error"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg ok"></div>
+                            <div class="bar-seg error"></div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-value bad">87%</div>
+                                <div class="metric-label" data-i18n="metric.successRate">Success Rate</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value">1.8s</div>
+                                <div class="metric-label" data-i18n="metric.avgDuration">Avg Duration</div>
+                            </div>
+                        </div>
+                        <div class="card-detail">
+                            <div class="detail-tabs">
+                                <div class="detail-tab active" onclick="switchDetailTab(this, 'failures')">Failures
+                                </div>
+                                <div class="detail-tab" onclick="switchDetailTab(this, 'agent')">Agent AI</div>
+                            </div>
+                            <div class="detail-content-wrapper">
+                                <div class="tab-content failures show">
+                                    <div class="event-list">
+                                        <div class="event-item">
+                                            <div class="event-msg"><span class="event-id">ORD-999</span> Payment
+                                                callback timeout</div>
+                                            <div class="flow-trace"><span class="flow-step ok">Create</span><span
+                                                    class="flow-step ok">Stock</span><span
+                                                    class="flow-step error">Callback</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-content agent">
+                                    <div class="agent-view">
+                                        <div class="agent-header">
+                                            <div class="agent-pulse"></div><span>Agent Analysis</span>
+                                        </div>
+                                        <div class="root-cause-box">
+                                            <div style="font-weight:600">Root Cause</div>
+                                            <div>External Payment Provider latency (12.5s).</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            'en': {
+                'app.name': 'Monitor', 'project.ecommerce': 'E-Commerce', 'action.search': 'Search...',
+                'status.normal': 'Normal', 'status.error': 'Error', 'status.slow': 'Slow Response',
+                'tab.events': 'Events', 'tab.agent': 'Agent AI', 'tab.config': 'Config', 'tab.failures': 'Failures',
+                'metric.uptime': 'Uptime', 'metric.latency': 'Latency', 'metric.interval': 'Interval',
+                'metric.successRate': 'Success Rate', 'metric.avgDuration': 'Avg Duration', 'metric.failures': 'Failures',
+                'value.timeout': 'Timeout', 'action.newProject': 'New Project', 'action.settings': 'Settings',
+                'section.infrastructure': 'Infrastructure', 'section.businessFlow': 'Business Flow',
+                'monitor.apiGateway': 'API Gateway', 'monitor.rabbitmq': 'RabbitMQ', 'monitor.orderFlow': 'Order Flow'
+            },
+            'zh': {
+                'app.name': '监控中心', 'project.ecommerce': '电商主站', 'action.search': '搜索...',
+                'status.normal': '正常', 'status.error': '异常', 'status.slow': '慢响应',
+                'tab.events': '最近事件', 'tab.agent': 'Agent 诊断', 'tab.config': '配置', 'tab.failures': '失败记录',
+                'metric.uptime': '可用率', 'metric.latency': '响应时间', 'metric.interval': '检测间隔',
+                'metric.successRate': '成功率', 'metric.avgDuration': '平均耗时', 'metric.failures': '失败次数',
+                'value.timeout': '超时', 'action.newProject': '+ 新建项目', 'action.settings': '设置',
+                'section.infrastructure': '基础设施', 'section.businessFlow': '业务流程',
+                'monitor.apiGateway': 'API 网关', 'monitor.rabbitmq': 'RabbitMQ', 'monitor.orderFlow': '订单流程'
+            }
+        };
+
+        function applyI18n(lang) {
+            const trans = i18n[lang] || i18n['zh'];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (trans[key]) el.textContent = trans[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (trans[key]) el.setAttribute('placeholder', trans[key]);
+            });
+        }
+        applyI18n('zh');
+
+        function toggleDetail(card) {
+            const detail = card.querySelector('.card-detail');
+            if (detail) {
+                document.querySelectorAll('.card-detail.show').forEach(d => {
+                    if (d !== detail) d.classList.remove('show');
+                });
+                detail.classList.toggle('show');
+            }
+        }
+
+        function switchDetailTab(tabEl, tabName) {
+            event.stopPropagation();
+            const tabs = tabEl.parentElement.querySelectorAll('.detail-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            tabEl.classList.add('active');
+
+            const wrapper = tabEl.parentElement.nextElementSibling;
+            wrapper.querySelectorAll('.tab-content').forEach(c => c.classList.remove('show'));
+            const target = wrapper.querySelector(`.tab-content.${tabName}`) || wrapper.querySelector(`.tab-content.events`) || wrapper.querySelector(`.tab-content.failures`);
+            if (target) target.classList.add('show');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'l' || e.key === 'L') {
+                const cur = document.documentElement.lang === 'en' ? 'zh' : 'en';
+                document.documentElement.lang = cur;
+                applyI18n(cur);
+            }
+        });
+    </script>
+</body>
+
+</html>

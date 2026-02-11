@@ -1,0 +1,34 @@
+# Go
+server/tmp/
+server/bin/
+
+# Node
+node_modules/
+.next/
+out/
+
+# Foundry / Solidity
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# Environment (contains private keys!)
+.env
+*.env.local
+
+# Docs
+docs/
+private-docs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log

@@ -1,0 +1,47 @@
+{
+    "app": {
+        "name": "监控中心"
+    },
+    "project": {
+        "ecommerce": "电商主站",
+        "payment": "Payment",
+        "user": "User Center"
+    },
+    "action": {
+        "search": "搜索...",
+        "newProject": "+ 新建项目",
+        "settings": "设置",
+        "newMonitor": "+ 新建监控"
+    },
+    "status": {
+        "normal": "正常",
+        "error": "异常",
+        "slow": "慢响应"
+    },
+    "tab": {
+        "events": "最近事件",
+        "agent": "Agent 诊断",
+        "config": "配置",
+        "failures": "失败记录"
+    },
+    "metric": {
+        "uptime": "可用率",
+        "latency": "响应时间",
+        "interval": "检测间隔",
+        "successRate": "成功率",
+        "avgDuration": "平均耗时",
+        "failures": "失败次数"
+    },
+    "value": {
+        "timeout": "超时"
+    },
+    "section": {
+        "infrastructure": "基础设施",
+        "businessFlow": "业务流程"
+    },
+    "monitor": {
+        "apiGateway": "API 网关",
+        "rabbitmq": "RabbitMQ",
+        "orderFlow": "订单流程"
+    }
+}

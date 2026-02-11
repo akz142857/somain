@@ -1,0 +1,47 @@
+{
+    "app": {
+        "name": "Monitor"
+    },
+    "project": {
+        "ecommerce": "E-Commerce",
+        "payment": "Payment",
+        "user": "User Center"
+    },
+    "action": {
+        "search": "Search...",
+        "newProject": "New Project",
+        "settings": "Settings",
+        "newMonitor": "New Monitor"
+    },
+    "status": {
+        "normal": "Normal",
+        "error": "Error",
+        "slow": "Slow Response"
+    },
+    "tab": {
+        "events": "Events",
+        "agent": "Agent AI",
+        "config": "Config",
+        "failures": "Failures"
+    },
+    "metric": {
+        "uptime": "Uptime",
+        "latency": "Latency",
+        "interval": "Interval",
+        "successRate": "Success Rate",
+        "avgDuration": "Avg Duration",
+        "failures": "Failures"
+    },
+    "value": {
+        "timeout": "Timeout"
+    },
+    "section": {
+        "infrastructure": "Infrastructure",
+        "businessFlow": "Business Flow"
+    },
+    "monitor": {
+        "apiGateway": "API Gateway",
+        "rabbitmq": "RabbitMQ",
+        "orderFlow": "Order Flow"
+    }
+}

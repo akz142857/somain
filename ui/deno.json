@@ -1,0 +1,12 @@
+{
+  "tasks": {
+    "dev": "deno run -A --node-modules-dir npm:vite",
+    "build": "deno run -A --node-modules-dir npm:vite build",
+    "preview": "deno run -A --node-modules-dir npm:vite preview"
+  },
+  "imports": {
+    "vue": "npm:vue@^3.4.0",
+    "vue-i18n": "npm:vue-i18n@^9.9.0"
+  },
+  "nodeModulesDir": "auto"
+}
