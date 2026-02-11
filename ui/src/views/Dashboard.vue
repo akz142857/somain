@@ -98,6 +98,8 @@ onUnmounted(() => {
         v-if="!isLoading"
         v-for="m in infrastructureMonitors"
         :key="m.id"
+        class="monitor-item"
+        :class="{ 'expanded': expandedMonitorId === m.id }"
         :monitor="m as any"
         :is-expanded="expandedMonitorId === m.id"
         @toggle="handleToggleMonitor(m.id)"
@@ -132,6 +134,8 @@ onUnmounted(() => {
         v-if="!isLoading"
         v-for="m in businessMonitors"
         :key="m.id"
+        class="monitor-item"
+        :class="{ 'expanded': expandedMonitorId === m.id }"
         :monitor="m as any"
         :is-expanded="expandedMonitorId === m.id"
         @toggle="handleToggleMonitor(m.id)"
@@ -202,6 +206,16 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 16px;
+  align-items: start; /* Prevent stretching */
+}
+
+.monitor-item {
+  height: max-content; /* Ensure height adjusts to content */
+}
+
+.monitor-item.expanded {
+  z-index: 100;
+  position: relative;
 }
 
 /* Skeleton Styles */

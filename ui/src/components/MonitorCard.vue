@@ -74,7 +74,7 @@ const switchTab = (tab: string, event: Event) => {
     </div>
 
     <!-- Expanded Details -->
-    <div v-if="isExpanded" class="card-detail" @click.stop>
+    <div v-if="props.isExpanded" class="card-detail" @click.stop>
       <div class="detail-tabs">
         <div 
           class="tab-item" 
@@ -148,7 +148,7 @@ const switchTab = (tab: string, event: Event) => {
   transition: all 0.2s;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; Removed for floating detail */
 }
 
 .monitor-card:hover {
@@ -273,10 +273,19 @@ const switchTab = (tab: string, event: Event) => {
 .spark-bar.slow { background: var(--color-warning); }
 
 .card-detail {
-  margin-top: 16px;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 12px;
-  animation: slideDown 0.3s ease-out;
+  position: absolute;
+  top: 100%; /* Position right below the card */
+  left: 0;
+  width: 100%;
+  background: white;
+  z-index: 10;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+  border-radius: 0 0 8px 8px;
+  border: 1px solid #f0f0f0;
+  border-top: none;
+  padding: 16px;
+  margin-top: -2px; /* Slight overlap to merge borders */
+  animation: slideDown 0.2s ease-out;
 }
 
 @keyframes slideDown {
