@@ -41,6 +41,7 @@ export interface Monitor {
     history: ('ok' | 'error' | 'slow')[];
     events?: MonitorEvent[];
     agent?: MonitorAgent;
+    flowSteps?: { name: string; status: 'ok' | 'error' | 'pending'; duration?: string }[];
 }
 
 export const initialInfrastructure: Monitor[] = [
@@ -124,6 +125,12 @@ export const initialBusiness: Monitor[] = [
             { labelKey: 'metric.avgDuration', value: '1.8s' }
         ],
         history: ['ok', 'ok', 'ok', 'error', 'ok', 'error', 'ok', 'ok', 'ok', 'error'],
+        flowSteps: [
+            { name: 'Create', status: 'ok', duration: '120ms' },
+            { name: 'Stock', status: 'ok', duration: '450ms' },
+            { name: 'Pay', status: 'ok', duration: '1.2s' },
+            { name: 'Callback', status: 'error', duration: '15s' }
+        ],
         events: [
             {
                 id: 'ORD-999',

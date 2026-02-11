@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AgentView from './AgentView.vue';
+import BusinessFlow from './BusinessFlow.vue';
 
 const props = defineProps<{
   monitor: {
@@ -17,6 +18,7 @@ const props = defineProps<{
       steps?: { title: string; desc: string }[];
       rootCause?: { title: string; desc: string; confidence?: string };
     };
+    flowSteps?: { name: string; status: 'ok' | 'error' | 'pending'; duration?: string }[];
   };
   isExpanded?: boolean;
 }>();
@@ -24,7 +26,7 @@ const props = defineProps<{
 const emit = defineEmits(['toggle', 'ask-agent']);
 
 const { t } = useI18n();
-const activeTab = ref('events');
+const activeTab = ref(props.monitor.flowSteps ? 'flow' : 'events');
 
 const handleAskAgent = () => {
   emit('ask-agent', props.monitor);
@@ -81,6 +83,14 @@ const switchTab = (tab: string, event: Event) => {
     <div v-if="props.isExpanded" class="card-detail" @click.stop>
       <div class="detail-tabs">
         <div 
+          v-if="monitor.flowSteps"
+          class="tab-item" 
+          :class="{ active: activeTab === 'flow' }"
+          @click="activeTab = 'flow'"
+        >
+          Flow
+        </div>
+        <div 
           class="tab-item" 
           :class="{ active: activeTab === 'events' }"
           @click="activeTab = 'events'"
@@ -110,6 +120,11 @@ const switchTab = (tab: string, event: Event) => {
       </div>
 
       <div class="tab-content">
+        <!-- Flow Tab -->
+        <div v-if="activeTab === 'flow' && monitor.flowSteps" class="flow-pane">
+            <BusinessFlow :steps="monitor.flowSteps" />
+        </div>
+
         <!-- Agent Tab -->
         <AgentView 
           v-if="activeTab === 'agent' && monitor.agent"
@@ -379,6 +394,10 @@ const switchTab = (tab: string, event: Event) => {
 .config-row {
   display: flex;
   justify-content: space-between;
+}
+
+.flow-pane {
+  padding: 8px 0;
 }
 
 .header-actions {
