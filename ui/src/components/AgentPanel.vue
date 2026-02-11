@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useAgentContext } from '../composables/useAgentContext';
 import { useMockService } from '../services/mockService';
 import { useProject } from '../composables/useProject';
+import MonitorSelector from './MonitorSelector.vue';
 
 const { t } = useI18n();
 const { context, messages, sendMessage } = useAgentContext();
@@ -17,8 +18,9 @@ const suggestionType = ref<'monitor' | 'tool'>('monitor');
 const suggestionQuery = ref('');
 const activeSuggestionIndex = ref(0);
 const inputRef = ref<HTMLTextAreaElement | null>(null);
+const showMonitorSelector = ref(false);
 
-const monitors = ref<{ id: string; name: string; type: string }[]>([]);
+const monitors = ref<{ id: string; name: string; type: string; status: string; metric: string }[]>([]);
 
 const tools = [
   { id: 'fix', name: 'Fix', desc: 'Attempt to fix the issue' },
@@ -30,9 +32,18 @@ const tools = [
 const updateMonitors = async () => {
   const infra = await getInfrastructure(activeProjectId.value);
   const bus = await getBusiness(activeProjectId.value);
+  
+  const mapMonitor = (m: any, type: string) => ({
+    id: m.id,
+    name: m.name || t(m.nameKey),
+    type,
+    status: m.status,
+    metric: m.metrics && m.metrics.length > 0 ? m.metrics[0].value : ''
+  });
+
   monitors.value = [
-    ...infra.value.map(m => ({ id: m.id, name: (m as any).name || t(m.nameKey), type: 'infra' })),
-    ...bus.value.map(m => ({ id: m.id, name: (m as any).name || t(m.nameKey), type: 'business' }))
+    ...infra.value.map(m => mapMonitor(m, 'infra')),
+    ...bus.value.map(m => mapMonitor(m, 'business'))
   ];
 };
 
@@ -46,8 +57,17 @@ watch(activeProjectId, () => {
 
 const filteredSuggestions = computed(() => {
   const query = suggestionQuery.value.toLowerCase();
+  
   if (suggestionType.value === 'monitor') {
-    return monitors.value.filter(m => m.name.toLowerCase().includes(query)).slice(0, 5);
+    let list = monitors.value.filter(m => m.name.toLowerCase().includes(query));
+    
+    // Sort by priority: error > slow > ok
+    list.sort((a, b) => {
+        const score = (s: string) => s === 'error' ? 3 : s === 'slow' ? 2 : 1;
+        return score(b.status) - score(a.status);
+    });
+    
+    return list.slice(0, 5); // Limit to top 5
   } else {
     return tools.filter(t => t.name.toLowerCase().includes(query));
   }
@@ -100,6 +120,11 @@ const selectSuggestion = (item: any) => {
         }
     }, 0);
   }
+};
+
+const handleSelectMonitor = (monitor: any) => {
+  selectSuggestion(monitor);
+  showMonitorSelector.value = false;
 };
 
 const handleSend = () => {
@@ -205,19 +230,40 @@ const handleRemoveContext = () => {
 
         <div class="input-wrapper">
           <!-- Suggestions Popup -->
-          <div v-if="showSuggestions && filteredSuggestions.length > 0" class="suggestions-popup">
-            <div 
-              v-for="(item, idx) in filteredSuggestions" 
-              :key="item.id" 
-              class="suggestion-item"
-              :class="{ active: idx === activeSuggestionIndex }"
-              @click="selectSuggestion(item)"
-            >
-              <div class="suggestion-icon">{{ suggestionType === 'monitor' ? '🔍' : '🛠️' }}</div>
-              <div class="suggestion-info">
-                <div class="suggestion-name">{{ item.name }}</div>
-                <div v-if="(item as any).desc" class="suggestion-desc">{{ (item as any).desc }}</div>
-              </div>
+          <div v-if="showSuggestions" class="suggestions-popup">
+            <div v-if="filteredSuggestions.length > 0">
+                <div 
+                v-for="(item, idx) in filteredSuggestions" 
+                :key="item.id" 
+                class="suggestion-item"
+                :class="{ active: idx === activeSuggestionIndex }"
+                @click="selectSuggestion(item)"
+                >
+                <div class="suggestion-icon">
+                    <span v-if="suggestionType === 'tool'">🛠️</span>
+                    <span v-else>
+                        <span v-if="(item as any).status === 'error'">🔴</span>
+                        <span v-else-if="(item as any).status === 'slow'">🟠</span>
+                        <span v-else>🟢</span>
+                    </span>
+                </div>
+                <div class="suggestion-info">
+                    <div class="suggestion-header">
+                        <span class="suggestion-name">{{ item.name }}</span>
+                        <span v-if="(item as any).metric" class="suggestion-metric">{{ (item as any).metric }}</span>
+                    </div>
+                    <div v-if="(item as any).desc" class="suggestion-desc">{{ (item as any).desc }}</div>
+                </div>
+                </div>
+            </div>
+            <div v-else class="suggestion-empty">
+                No matches found
+            </div>
+            
+            <div v-if="suggestionType === 'monitor'" class="suggestion-footer">
+                <div class="suggestion-item footer-item" @click="showMonitorSelector = true">
+                    <span class="icon">📋</span> View all monitors...
+                </div>
             </div>
           </div>
 
@@ -238,122 +284,17 @@ const handleRemoveContext = () => {
         </div>
       </div>
     </div>
+    
+    <MonitorSelector 
+      :is-open="showMonitorSelector" 
+      :monitors="monitors"
+      @close="showMonitorSelector = false"
+      @select="handleSelectMonitor"
+    />
   </div>
 </template>
 
 <style scoped>
-/* ... existing styles ... */
-.chat-input-area {
-  padding: 16px;
-  background: white;
-  border-top: 1px solid #f0f0f0;
-}
-
-.input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.suggestions-popup {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  width: 100%;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 100;
-  margin-bottom: 8px;
-}
-
-.suggestion-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-bottom: 1px solid #f5f5f5;
-}
-
-.suggestion-item:last-child { border-bottom: none; }
-
-.suggestion-item:hover, .suggestion-item.active {
-  background: #f0f7ff;
-}
-
-.suggestion-icon {
-  font-size: 16px;
-}
-
-.suggestion-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.suggestion-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: #333;
-}
-
-.suggestion-desc {
-  font-size: 11px;
-  color: #999;
-}
-
-/* ... existing styles ... */
-.context-chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #1e3a8a; /* Dark blue */
-  color: white;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  animation: fadeIn 0.2s;
-}
-
-.chip-icon {
-  background: #f97316; /* Orange */
-  color: white;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px; /* Just a guess on shape, maybe generic icon */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: bold;
-}
-
-.chip-close {
-  background: none;
-  border: none;
-  color: rgba(255,255,255,0.7);
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 4px;
-  padding: 0 4px;
-}
-
-.chip-close:hover {
-  color: white;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* ... existing */
 .agent-panel {
   width: 350px;
   background: white;
@@ -464,27 +405,92 @@ const handleRemoveContext = () => {
   border-top: 1px solid #f0f0f0;
 }
 
-.tools-row {
-  display: flex;
-  gap: 8px;
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.suggestions-popup {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
   margin-bottom: 8px;
 }
 
-.tool-btn {
-  background: #f5f5f5;
-  border: none;
-  border-radius: 4px;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
+.suggestion-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  transition: all 0.2s;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
 }
 
-.tool-btn:hover { background: #e6f7ff; }
+.suggestion-item:last-child { border-bottom: none; }
+
+.suggestion-item:hover, .suggestion-item.active {
+  background: #f0f7ff;
+}
+
+.suggestion-icon {
+  font-size: 16px;
+}
+
+.suggestion-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.suggestion-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.suggestion-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.suggestion-metric {
+    font-size: 11px;
+    color: #666;
+    background: #f0f0f0;
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+.suggestion-desc {
+  font-size: 11px;
+  color: #999;
+}
+
+.suggestion-empty {
+    padding: 12px;
+    color: #999;
+    font-size: 13px;
+    text-align: center;
+}
+
+.suggestion-footer {
+    border-top: 1px solid #eee;
+    background: #f9f9f9;
+}
+
+.footer-item {
+    color: #1890ff;
+    font-weight: 500;
+}
 
 .chat-input {
   width: 100%;
@@ -558,5 +564,53 @@ const handleRemoveContext = () => {
   width: 28px;
   height: 28px;
   justify-content: center;
+}
+
+.context-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e3a8a; /* Dark blue */
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  animation: fadeIn 0.2s;
+}
+
+.chip-icon {
+  background: #f97316; /* Orange */
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px; /* Just a guess on shape, maybe generic icon */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.chip-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  padding: 0 4px;
+}
+
+.chip-close:hover {
+  color: white;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 </style>
