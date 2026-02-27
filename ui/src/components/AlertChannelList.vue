@@ -7,7 +7,9 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
+  edit: [channel: AlertChannel];
   delete: [id: string];
+  toggleEnabled: [id: string, enabled: boolean];
 }>();
 
 const { t } = useI18n();
@@ -24,15 +26,26 @@ const configSummary = (ch: AlertChannel) => {
 <template>
   <div class="channel-list">
     <div v-if="channels.length" class="channel-grid">
-      <div v-for="ch in channels" :key="ch.id" class="channel-card">
+      <div v-for="ch in channels" :key="ch.id" class="channel-card" :class="{ disabled: !ch.enabled }">
         <div class="channel-header">
           <span class="channel-name">{{ ch.name }}</span>
-          <span class="type-badge" :class="typeClass(ch.type)">{{ t(`alert.${ch.type}`) }}</span>
+          <div class="header-right">
+            <span v-if="!ch.enabled" class="disabled-badge">{{ t('alert.disabled') }}</span>
+            <span class="type-badge" :class="typeClass(ch.type)">{{ t(`alert.${ch.type}`) }}</span>
+          </div>
         </div>
         <div class="channel-config">{{ configSummary(ch) }}</div>
         <div class="channel-footer">
           <span class="channel-date">{{ ch.createdAt.split('T')[0] }}</span>
-          <button class="delete-btn" @click="emit('delete', ch.id)">Delete</button>
+          <div class="action-btns">
+            <button
+              class="toggle-btn"
+              :class="ch.enabled ? 'enabled' : 'off'"
+              @click="emit('toggleEnabled', ch.id, !ch.enabled)"
+            >{{ ch.enabled ? t('alert.enabled') : t('alert.disabled') }}</button>
+            <button class="edit-btn" @click="emit('edit', ch)">{{ t('action.edit') }}</button>
+            <button class="delete-btn" @click="emit('delete', ch.id)">{{ t('action.delete') }}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -59,11 +72,30 @@ const configSummary = (ch: AlertChannel) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.channel-card.disabled {
+  opacity: 0.55;
+}
+
 .channel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.disabled-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: #999;
+  background: #f0f0f0;
 }
 
 .channel-name {
@@ -110,6 +142,46 @@ const configSummary = (ch: AlertChannel) => {
 .channel-date {
   font-size: 11px;
   color: #bbb;
+}
+
+.action-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.toggle-btn {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+  cursor: pointer;
+  background: white;
+  transition: all 0.2s;
+}
+
+.toggle-btn.enabled {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.toggle-btn.off {
+  color: #999;
+  border-color: #d9d9d9;
+}
+
+.edit-btn {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  background: rgba(24, 144, 255, 0.1);
+  color: var(--color-primary);
+  transition: background 0.2s;
+}
+
+.edit-btn:hover {
+  background: rgba(24, 144, 255, 0.2);
 }
 
 .delete-btn {

@@ -185,6 +185,7 @@ export interface AlertChannel {
     name: string;
     type: AlertChannelType;
     config: Record<string, string>;
+    enabled: boolean;
     createdAt: string;
 }
 
@@ -272,6 +273,7 @@ export const initialAlertChannels: AlertChannel[] = [
         name: 'Ops Feishu Group',
         type: 'feishu',
         config: { webhookUrl: 'https://open.feishu.cn/open-apis/bot/v2/hook/xxx' },
+        enabled: true,
         createdAt: '2026-02-20T08:00:00Z'
     },
     {
@@ -279,6 +281,7 @@ export const initialAlertChannels: AlertChannel[] = [
         name: 'PagerDuty Webhook',
         type: 'webhook',
         config: { url: 'https://events.pagerduty.com/v2/enqueue', secret: 'pd-secret-xxx' },
+        enabled: true,
         createdAt: '2026-02-21T10:00:00Z'
     }
 ];

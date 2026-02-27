@@ -75,13 +75,13 @@ export const getMonitorIdsForProject = (projectId: string): Set<string> => {
     return ids;
 };
 
-export const getMonitorsForProject = (projectId: string): { id: string; name: string }[] => {
-    const result: { id: string; name: string }[] = [];
+export const getMonitorsForProject = (projectId: string): { id: string; name: string; nameKey: string }[] => {
+    const result: { id: string; name: string; nameKey: string }[] = [];
     for (const m of infrastructureForSim.value) {
-        if (m.projectId === projectId) result.push({ id: m.id, name: m.desc || m.nameKey || m.id });
+        if (m.projectId === projectId) result.push({ id: m.id, name: m.name || m.nameKey || m.id, nameKey: m.nameKey });
     }
     for (const m of businessForSim.value) {
-        if (m.projectId === projectId) result.push({ id: m.id, name: m.desc || m.nameKey || m.id });
+        if (m.projectId === projectId) result.push({ id: m.id, name: m.name || m.nameKey || m.id, nameKey: m.nameKey });
     }
     return result;
 };
@@ -216,15 +216,24 @@ export const useMockService = () => {
         return alertChannelsForSim;
     };
 
-    const createAlertChannel = async (channel: Omit<AlertChannel, 'id' | 'createdAt'>) => {
+    const createAlertChannel = async (channel: Omit<AlertChannel, 'id' | 'createdAt' | 'enabled'>) => {
         await new Promise(r => setTimeout(r, 300));
         const newChannel: AlertChannel = {
             ...channel,
+            enabled: true,
             id: 'ch-' + Date.now(),
             createdAt: new Date().toISOString()
         };
         alertChannelsForSim.value.push(newChannel);
         return newChannel;
+    };
+
+    const updateAlertChannel = async (id: string, updates: Partial<AlertChannel>) => {
+        await new Promise(r => setTimeout(r, 300));
+        const idx = alertChannelsForSim.value.findIndex(c => c.id === id);
+        if (idx !== -1) {
+            alertChannelsForSim.value[idx] = { ...alertChannelsForSim.value[idx], ...updates };
+        }
     };
 
     const deleteAlertChannel = async (id: string) => {
@@ -429,6 +438,7 @@ export const useMockService = () => {
         deleteAlertRule,
         getAlertChannels,
         createAlertChannel,
+        updateAlertChannel,
         deleteAlertChannel,
         getAlertEvents,
         getLogs,

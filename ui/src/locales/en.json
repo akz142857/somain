@@ -21,7 +21,9 @@
         "newMonitor": "New Monitor",
         "cancel": "Cancel",
         "confirm": "Confirm",
-        "select": "Select"
+        "select": "Select",
+        "edit": "Edit",
+        "delete": "Delete"
     },
     "status": {
         "normal": "Normal",
@@ -43,7 +45,9 @@
         "interval": "Interval",
         "successRate": "Success Rate",
         "avgDuration": "Avg Duration",
-        "failures": "Failures"
+        "failures": "Failures",
+        "throughput": "Throughput",
+        "errorRate": "Error Rate"
     },
     "value": {
         "timeout": "Timeout"
@@ -86,7 +90,8 @@
     "nav": {
         "dashboard": "Dashboard",
         "alerts": "Alerts",
-        "settings": "Settings"
+        "settings": "Settings",
+        "notifications": "Notifications"
     },
     "settings": {
         "pageTitle": "Settings",
@@ -98,7 +103,9 @@
         "theme": "Theme",
         "themeDesc": "Current theme configuration",
         "about": "About",
-        "version": "Version"
+        "version": "Version",
+        "notifications": "Notification Channels",
+        "notificationsDesc": "Manage notification channels for alert rules"
     },
     "alert": {
         "pageTitle": "Alert Management",
@@ -108,6 +115,7 @@
         "addRule": "Add Rule",
         "editRule": "Edit Rule",
         "addChannel": "Add Channel",
+        "editChannel": "Edit Channel",
         "ruleName": "Rule Name",
         "monitor": "Monitor",
         "metric": "Metric",
@@ -138,7 +146,10 @@
         "firedAt": "Fired At",
         "resolvedAt": "Resolved At",
         "value": "Value",
-        "deleteConfirm": "Are you sure?"
+        "deleteConfirm": "Are you sure?",
+        "basic": "Basic",
+        "condition": "Condition",
+        "notification": "Notification"
     },
     "log": {
         "title": "Logs",

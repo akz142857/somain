@@ -5,27 +5,24 @@ import { useMockService, getMonitorIdsForProject, getMonitorsForProject } from '
 import { useProject } from '../composables/useProject';
 import AlertRuleList from '../components/AlertRuleList.vue';
 import AlertRuleForm from '../components/AlertRuleForm.vue';
-import AlertChannelList from '../components/AlertChannelList.vue';
-import AlertChannelForm from '../components/AlertChannelForm.vue';
 import AlertHistory from '../components/AlertHistory.vue';
 import type { AlertRule, AlertChannel, AlertEvent } from '../services/mockData';
 
 const { t } = useI18n();
 const {
   getAlertRules, createAlertRule, updateAlertRule, deleteAlertRule,
-  getAlertChannels, createAlertChannel, deleteAlertChannel,
+  getAlertChannels,
   getAlertEvents
 } = useMockService();
 const { activeProjectId } = useProject();
 
-const activeTab = ref<'rules' | 'channels' | 'history'>('rules');
+const activeTab = ref<'rules' | 'history'>('rules');
 const rules = ref<AlertRule[]>([]);
 const channels = ref<AlertChannel[]>([]);
 const events = ref<AlertEvent[]>([]);
 
 const showRuleForm = ref(false);
 const editingRule = ref<AlertRule | null>(null);
-const showChannelForm = ref(false);
 
 // Monitors list dynamically based on active project
 const monitors = computed(() => getMonitorsForProject(activeProjectId.value));
@@ -34,7 +31,7 @@ const loadData = async () => {
   const monitorIds = getMonitorIdsForProject(activeProjectId.value);
   const allRules = (await getAlertRules()).value;
   rules.value = allRules.filter(r => monitorIds.has(r.monitorId));
-  channels.value = (await getAlertChannels()).value; // channels stay global
+  channels.value = (await getAlertChannels()).value; // channels stay global for rule form
   const allEvents = (await getAlertEvents()).value;
   events.value = allEvents.filter(e => monitorIds.has(e.monitorId));
 };
@@ -70,22 +67,12 @@ const handleDeleteRule = async (id: string) => {
   await deleteAlertRule(id);
   await loadData();
 };
-
-const handleSaveChannel = async (data: { name: string; type: any; config: Record<string, string> }) => {
-  await createAlertChannel(data);
-  showChannelForm.value = false;
-};
-
-const handleDeleteChannel = async (id: string) => {
-  await deleteAlertChannel(id);
-};
 </script>
 
 <template>
   <div class="alert-management">
     <div class="tab-bar">
       <div class="tab" :class="{ active: activeTab === 'rules' }" @click="activeTab = 'rules'">{{ t('alert.rules') }}</div>
-      <div class="tab" :class="{ active: activeTab === 'channels' }" @click="activeTab = 'channels'">{{ t('alert.channels') }}</div>
       <div class="tab" :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">{{ t('alert.history') }}</div>
     </div>
 
@@ -99,17 +86,6 @@ const handleDeleteChannel = async (id: string) => {
         @edit="handleEditRule"
         @delete="handleDeleteRule"
         @toggle-status="handleToggleRuleStatus"
-      />
-    </div>
-
-    <!-- Channels Tab -->
-    <div v-if="activeTab === 'channels'" class="tab-content">
-      <div class="tab-toolbar">
-        <button class="add-btn" @click="showChannelForm = true">+ {{ t('alert.addChannel') }}</button>
-      </div>
-      <AlertChannelList
-        :channels="channels"
-        @delete="handleDeleteChannel"
       />
     </div>
 
@@ -127,44 +103,41 @@ const handleDeleteChannel = async (id: string) => {
       @close="showRuleForm = false"
       @save="handleSaveRule"
     />
-
-    <AlertChannelForm
-      :visible="showChannelForm"
-      @close="showChannelForm = false"
-      @save="handleSaveChannel"
-    />
   </div>
 </template>
 
 <style scoped>
 .alert-management {
-  max-width: 1200px;
+  width: 100%;
 }
 
 .tab-bar {
-  display: flex;
-  gap: 24px;
-  border-bottom: 1px solid #f0f0f0;
+  display: inline-flex;
+  gap: 4px;
+  background: #f0f0f0;
+  padding: 3px;
+  border-radius: 8px;
   margin-bottom: 20px;
 }
 
 .tab {
-  font-size: 14px;
-  color: #999;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
   cursor: pointer;
-  padding-bottom: 10px;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  padding: 6px 16px;
+  border-radius: 6px;
+  transition: all 0.15s;
 }
 
 .tab:hover {
-  color: #666;
+  color: #333;
 }
 
 .tab.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  font-weight: 600;
+  color: #1a1a1a;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .tab-content {

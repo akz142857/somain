@@ -3,9 +3,10 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-defineProps<{
+const props = defineProps<{
   visible: boolean;
   title: string;
+  width?: string;
 }>();
 
 const emit = defineEmits(['close', 'confirm']);
@@ -16,7 +17,7 @@ const confirm = () => emit('confirm');
 
 <template>
   <div class="drawer-overlay" :class="{ show: visible }" @click.self="close">
-    <div class="drawer-content" :class="{ show: visible }">
+    <div class="drawer-content" :class="{ show: visible }" :style="props.width ? { width: props.width } : {}">
       <div class="drawer-header">
         <h3>{{ title }}</h3>
         <button class="close-btn" @click="close">&times;</button>

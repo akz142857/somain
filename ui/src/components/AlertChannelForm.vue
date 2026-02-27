@@ -2,10 +2,11 @@
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Modal from './Modal.vue';
-import type { AlertChannelType } from '../services/mockData';
+import type { AlertChannel, AlertChannelType } from '../services/mockData';
 
 const props = defineProps<{
   visible: boolean;
+  channel?: AlertChannel | null;
 }>();
 
 const emit = defineEmits<{
@@ -33,16 +34,31 @@ const configFields = computed(() => {
   }
 });
 
+const modalTitle = computed(() =>
+  props.channel ? t('alert.editChannel') : t('alert.addChannel')
+);
+
 watch(() => props.visible, (v) => {
   if (v) {
-    name.value = '';
-    channelType.value = 'feishu';
-    config.value = {};
+    if (props.channel) {
+      name.value = props.channel.name;
+      channelType.value = props.channel.type;
+      config.value = { ...props.channel.config };
+    } else {
+      name.value = '';
+      channelType.value = 'feishu';
+      config.value = {};
+    }
   }
 });
 
-watch(channelType, () => {
-  config.value = {};
+watch(channelType, (newVal, oldVal) => {
+  if (oldVal !== newVal) {
+    // Only reset config when type actually changes and not during initial load
+    if (!(props.channel && props.channel.type === newVal)) {
+      config.value = {};
+    }
+  }
 });
 
 const handleSave = () => {
@@ -54,7 +70,7 @@ const handleSave = () => {
 <template>
   <Modal
     :visible="visible"
-    :title="t('alert.addChannel')"
+    :title="modalTitle"
     @close="emit('close')"
     @confirm="handleSave"
   >

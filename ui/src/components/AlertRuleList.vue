@@ -20,6 +20,15 @@ const severityClass = (s: string) => s;
 <template>
   <div class="rule-list">
     <table v-if="rules.length" class="data-table">
+      <colgroup>
+        <col style="width: 22%" />
+        <col style="width: 15%" />
+        <col style="width: 14%" />
+        <col style="width: 14%" />
+        <col style="width: 11%" />
+        <col style="width: 10%" />
+        <col style="width: 14%" />
+      </colgroup>
       <thead>
         <tr>
           <th>{{ t('alert.ruleName') }}</th>
@@ -46,8 +55,8 @@ const severityClass = (s: string) => s;
             >{{ t(`alert.${rule.status}`) }}</button>
           </td>
           <td class="actions-cell">
-            <button class="action-btn edit" @click="emit('edit', rule)">Edit</button>
-            <button class="action-btn delete" @click="emit('delete', rule.id)">Delete</button>
+            <button class="action-btn edit" @click="emit('edit', rule)">{{ t('action.edit') }}</button>
+            <button class="action-btn delete" @click="emit('delete', rule.id)">{{ t('action.delete') }}</button>
           </td>
         </tr>
       </tbody>
@@ -59,6 +68,7 @@ const severityClass = (s: string) => s;
 <style scoped>
 .data-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   background: white;
   border-radius: 8px;
