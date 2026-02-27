@@ -16,6 +16,7 @@ const isFullWidth = computed(() => route.name === 'settings');
 const toggleLanguage = () => {
   locale.value = locale.value === 'en' ? 'zh' : 'en';
   document.documentElement.lang = locale.value;
+  localStorage.setItem('locale', locale.value);
 };
 
 // Listen for 'L' key to switch language, matching original functionality

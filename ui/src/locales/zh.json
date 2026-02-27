@@ -42,7 +42,8 @@
         "agent": "Agent 诊断",
         "config": "配置",
         "failures": "失败记录",
-        "logs": "日志"
+        "logs": "日志",
+        "flow": "流程"
     },
     "metric": {
         "uptime": "可用率",

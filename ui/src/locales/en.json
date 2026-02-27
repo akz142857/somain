@@ -42,7 +42,8 @@
         "agent": "Agent AI",
         "config": "Config",
         "failures": "Failures",
-        "logs": "Logs"
+        "logs": "Logs",
+        "flow": "Flow"
     },
     "metric": {
         "uptime": "Uptime",

@@ -3,10 +3,22 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AgentView from './AgentView.vue';
+import BusinessFlow from './BusinessFlow.vue';
+import SwitchIndicator from './widgets/SwitchIndicator.vue';
+import ProgressBar from './widgets/ProgressBar.vue';
+import ToggleTimeline from './widgets/ToggleTimeline.vue';
+import { resolveLayout } from '../config/cardLayouts';
 import { useProject } from '../composables/useProject';
 
 const router = useRouter();
 const { activeProjectCode } = useProject();
+
+const categoryLabelKey: Record<string, string> = {
+  infrastructure: 'section.infrastructure',
+  service: 'section.service',
+  switch: 'section.switch',
+  business: 'section.businessFlow',
+};
 
 const props = defineProps<{
   monitor: {
@@ -16,6 +28,7 @@ const props = defineProps<{
     desc: string;
     status: string;
     type: string;
+    category?: string;
     metrics: { labelKey: string; value: string; numericValue?: number; unit?: string; status?: 'good' | 'bad' }[];
     history: string[];
     events?: { time: string; msg: string; id?: string; flow?: { name: string; status: 'ok' | 'error' }[] }[];
@@ -28,10 +41,42 @@ const props = defineProps<{
   isExpanded?: boolean;
 }>();
 
+const categoryTag = computed(() => {
+  const cat = props.monitor.category || 'infrastructure';
+  return categoryLabelKey[cat] ? t(categoryLabelKey[cat]) : cat;
+});
+
 const emit = defineEmits(['toggle']);
 
 const { t } = useI18n();
-const activeTab = ref('events');
+
+const layout = computed(() => resolveLayout(props.monitor.type));
+
+const activeTab = ref(layout.value.detailTabs?.[0] ?? 'events');
+
+const heroMetric = computed(() => {
+  if (layout.value.metricsLayout !== 'hero' || layout.value.heroMetricIndex == null) return null;
+  return props.monitor.metrics[layout.value.heroMetricIndex] ?? null;
+});
+
+const secondaryMetrics = computed(() => {
+  if (layout.value.metricsLayout !== 'hero' || layout.value.heroMetricIndex == null) return props.monitor.metrics;
+  return props.monitor.metrics.filter((_, i) => i !== layout.value.heroMetricIndex);
+});
+
+const progressCurrent = computed(() => {
+  const indices = layout.value.progressMetricIndices;
+  if (!indices) return 0;
+  return props.monitor.metrics[indices[0]]?.numericValue ?? 0;
+});
+
+const progressDesired = computed(() => {
+  const indices = layout.value.progressMetricIndices;
+  if (!indices) return 0;
+  return props.monitor.metrics[indices[1]]?.numericValue ?? 0;
+});
+
+const hasWidget = (name: string) => layout.value.widgets?.includes(name as any) ?? false;
 
 const statusText = computed(() => {
   switch (props.monitor.status) {
@@ -70,19 +115,48 @@ const switchTab = (tab: string, event: Event) => {
         <div class="card-name">{{ monitor.name || t(monitor.nameKey) }}</div>
         <div class="card-desc">{{ monitor.desc }}</div>
       </div>
+      <span class="card-category">{{ categoryTag }}</span>
       <div class="card-status" :class="monitor.status">{{ t(statusText) }}</div>
     </div>
 
-    <!-- Metrics -->
-    <div class="metrics">
+    <!-- Metrics: hero layout -->
+    <div v-if="layout.metricsLayout === 'hero'" class="metrics-hero">
+      <div v-if="heroMetric" class="hero-main">
+        <span class="hero-label">{{ t(heroMetric.labelKey) }}</span>
+        <span class="hero-value" :class="heroMetric.status">{{ heroMetric.value }}</span>
+      </div>
+      <div class="hero-secondary">
+        <div v-for="(metric, idx) in secondaryMetrics" :key="idx" class="metric-item">
+          <span class="metric-label">{{ t(metric.labelKey) }}</span>
+          <span class="metric-value" :class="metric.status">{{ metric.value }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics: grid layout -->
+    <div v-else-if="layout.metricsLayout === 'grid'" class="metrics-grid-layout">
       <div v-for="(metric, idx) in monitor.metrics" :key="idx" class="metric-item">
         <span class="metric-label">{{ t(metric.labelKey) }}</span>
         <span class="metric-value" :class="metric.status">{{ metric.value }}</span>
       </div>
     </div>
-    
-    <!-- Mini History Chart -->
-    <div class="history-sparkline">
+
+    <!-- Metrics: inline layout (default) -->
+    <div v-else class="metrics">
+      <div v-for="(metric, idx) in monitor.metrics" :key="idx" class="metric-item">
+        <span class="metric-label">{{ t(metric.labelKey) }}</span>
+        <span class="metric-value" :class="metric.status">{{ metric.value }}</span>
+      </div>
+      <SwitchIndicator v-if="hasWidget('switch-indicator')" :status="monitor.status" />
+    </div>
+
+    <!-- Progress bar (between metrics and sparkline) -->
+    <ProgressBar v-if="hasWidget('progress-bar')" :current="progressCurrent" :desired="progressDesired" />
+
+    <!-- Sparkline: toggle-timeline -->
+    <ToggleTimeline v-if="layout.sparklineVariant === 'toggle-timeline'" :history="monitor.history" />
+    <!-- Sparkline: bar (default) -->
+    <div v-else class="history-sparkline">
         <div v-for="(h, i) in monitor.history" :key="i" class="spark-bar" :class="h"></div>
     </div>
 
@@ -90,27 +164,16 @@ const switchTab = (tab: string, event: Event) => {
     <div v-if="props.isExpanded" class="card-detail" @click.stop>
       <div class="detail-tabs">
         <div
+          v-for="tab in layout.detailTabs"
+          :key="tab"
           class="tab-item"
-          :class="{ active: activeTab === 'events' }"
-          @click="activeTab = 'events'"
+          :class="{ active: activeTab === tab }"
+          @click="activeTab = tab"
         >
-          {{ t('tab.events') }}
+          {{ t('tab.' + tab) }}
         </div>
         <div
-          class="tab-item"
-          :class="{ active: activeTab === 'agent' }"
-          @click="activeTab = 'agent'"
-        >
-          {{ t('tab.agent') }}
-        </div>
-        <div
-          class="tab-item"
-          :class="{ active: activeTab === 'config' }"
-          @click="activeTab = 'config'"
-        >
-          {{ t('tab.config') }}
-        </div>
-        <div
+          v-if="layout.showDetailLink"
           class="tab-item tab-detail"
           @click="router.push({ name: 'detail', params: { projectCode: activeProjectCode, monitorId: monitor.id } })"
         >
@@ -120,7 +183,7 @@ const switchTab = (tab: string, event: Event) => {
 
       <div class="tab-content">
         <!-- Agent Tab -->
-        <AgentView 
+        <AgentView
           v-if="activeTab === 'agent' && monitor.agent"
           :steps="monitor.agent.steps"
           :root-cause="monitor.agent.rootCause"
@@ -157,6 +220,11 @@ const switchTab = (tab: string, event: Event) => {
             <span class="value">{{ metric.value }}</span>
           </div>
         </div>
+
+        <!-- Flow Tab -->
+        <div v-if="activeTab === 'flow' && monitor.flowSteps" class="flow-pane">
+          <BusinessFlow :steps="monitor.flowSteps" />
+        </div>
       </div>
     </div>
   </div>
@@ -171,7 +239,6 @@ const switchTab = (tab: string, event: Event) => {
   transition: all 0.2s;
   cursor: pointer;
   position: relative;
-  /* overflow: hidden; Removed for floating detail */
 }
 
 .monitor-card:hover {
@@ -248,12 +315,23 @@ const switchTab = (tab: string, event: Event) => {
   text-overflow: ellipsis;
 }
 
+.card-category {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #f5f5f5;
+  color: #999;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .card-status {
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 10px;
   background: #f5f5f5;
   color: #666;
+  flex-shrink: 0;
 }
 
 .card-status.ok,
@@ -264,10 +342,11 @@ const switchTab = (tab: string, event: Event) => {
 .card-status.slow { color: var(--color-warning); background: rgba(250, 173, 20, 0.1); }
 .card-status.off { color: #999; background: #f0f0f0; }
 
+/* Inline metrics (default) */
 .metrics {
   display: flex;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   padding-top: 12px;
   border-top: 1px solid #f9f9f9;
 }
@@ -291,13 +370,62 @@ const switchTab = (tab: string, event: Event) => {
 
 .metric-value.bad { color: var(--color-error); }
 
+/* Hero metrics */
+.metrics-hero {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #f9f9f9;
+  margin-bottom: 12px;
+}
+
+.hero-main {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.hero-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.2;
+}
+
+.hero-value.bad { color: var(--color-error); }
+.hero-value.good { color: var(--color-success); }
+
+.hero-label {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 2px;
+}
+
+.hero-secondary {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Grid metrics */
+.metrics-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f9f9f9;
+  margin-bottom: 12px;
+}
+
 .action-btns { display: flex; gap: 8px; margin-top: 16px; }
 
 .history-sparkline {
   display: flex;
   gap: 2px;
   height: 8px;
-  margin-top: 12px;
+  margin-top: 8px;
   width: 100%;
 }
 
@@ -318,7 +446,7 @@ const switchTab = (tab: string, event: Event) => {
 
 .card-detail {
   position: absolute;
-  top: 100%; /* Position right below the card */
+  top: 100%;
   left: 0;
   width: 100%;
   background: white;
@@ -328,7 +456,7 @@ const switchTab = (tab: string, event: Event) => {
   border: 1px solid #f0f0f0;
   border-top: none;
   padding: 16px;
-  margin-top: -2px; /* Slight overlap to merge borders */
+  margin-top: -2px;
   animation: slideDown 0.2s ease-out;
 }
 
@@ -424,6 +552,10 @@ const switchTab = (tab: string, event: Event) => {
 
 .tab-detail:hover {
   opacity: 0.8;
+}
+
+.flow-pane {
+  margin: -8px -8px 0;
 }
 
 </style>

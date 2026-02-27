@@ -7,9 +7,11 @@ import './assets/base.css';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 
+const savedLocale = localStorage.getItem('locale') || 'en';
+
 const i18n = createI18n({
     legacy: false,
-    locale: 'en',
+    locale: savedLocale,
     fallbackLocale: 'en',
     messages: {
         en,

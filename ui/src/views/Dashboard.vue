@@ -5,7 +5,7 @@ import MonitorCard from '../components/MonitorCard.vue';
 import { useMockService } from '../services/mockService';
 import { useProject } from '../composables/useProject';
 import { useSearch } from '../composables/useSearch';
-import type { Monitor, MonitorCategory } from '../services/mockData';
+import type { Monitor } from '../services/mockData';
 
 const { t } = useI18n();
 const { getMonitors, getProjects, startSimulation, stopSimulation } = useMockService();
@@ -17,15 +17,6 @@ const isLoading = ref(true);
 
 const expandedMonitorId = ref<string | null>(null);
 
-const categoryOrder: MonitorCategory[] = ['infrastructure', 'service', 'switch', 'business'];
-
-const categoryLabelKey: Record<MonitorCategory, string> = {
-  infrastructure: 'section.infrastructure',
-  service: 'section.service',
-  switch: 'section.switch',
-  business: 'section.businessFlow'
-};
-
 const filterMonitors = (monitors: Monitor[]) => {
   if (!searchQuery.value) return monitors;
   const q = searchQuery.value.toLowerCase();
@@ -36,16 +27,7 @@ const filterMonitors = (monitors: Monitor[]) => {
   );
 };
 
-const groupedMonitors = computed(() => {
-  const filtered = filterMonitors(allMonitors.value);
-  const groups = new Map<MonitorCategory, Monitor[]>();
-  for (const m of filtered) {
-    const cat = m.category || 'infrastructure';
-    if (!groups.has(cat)) groups.set(cat, []);
-    groups.get(cat)!.push(m);
-  }
-  return groups;
-});
+const filteredMonitors = computed(() => filterMonitors(allMonitors.value));
 
 const fetchData = async () => {
     isLoading.value = true;
@@ -109,59 +91,20 @@ watch(activeProjectId, async (newId) => {
     </div>
   </div>
 
-  <template v-else>
-    <div
-      v-for="cat in categoryOrder"
-      :key="cat"
-      class="monitor-group"
-      v-show="groupedMonitors.has(cat)"
-    >
-      <div class="group-header">
-        <div class="group-title">
-          <span>{{ t(categoryLabelKey[cat]) }}</span>
-          <span class="group-count">({{ groupedMonitors.get(cat)?.length ?? 0 }})</span>
-        </div>
-      </div>
-
-      <div class="monitor-grid">
-        <MonitorCard
-          v-for="m in groupedMonitors.get(cat)"
-          :key="m.id"
-          class="monitor-item"
-          :class="{ 'expanded': expandedMonitorId === m.id }"
-          :monitor="m as any"
-          :is-expanded="expandedMonitorId === m.id"
-          @toggle="handleToggleMonitor(m.id)"
-        />
-      </div>
-    </div>
-  </template>
+  <div v-else class="monitor-grid">
+    <MonitorCard
+      v-for="m in filteredMonitors"
+      :key="m.id"
+      class="monitor-item"
+      :class="{ 'expanded': expandedMonitorId === m.id }"
+      :monitor="m as any"
+      :is-expanded="expandedMonitorId === m.id"
+      @toggle="handleToggleMonitor(m.id)"
+    />
+  </div>
 </template>
 
 <style scoped>
-.monitor-group {
-  margin-bottom: 32px;
-}
-
-.group-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.group-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.group-count {
-  color: var(--color-text-secondary);
-  font-weight: normal;
-  margin-left: 8px;
-}
-
 .monitor-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));

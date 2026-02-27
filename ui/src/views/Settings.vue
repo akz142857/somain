@@ -25,6 +25,7 @@ onMounted(loadChannels);
 const setLocale = (lang: string) => {
   locale.value = lang;
   document.documentElement.lang = lang;
+  localStorage.setItem('locale', lang);
 };
 
 const scrollTo = (id: string) => {
