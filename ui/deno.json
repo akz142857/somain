@@ -7,7 +7,13 @@
   "imports": {
     "vue": "npm:vue@^3.4.0",
     "vue-i18n": "npm:vue-i18n@^9.9.0",
-    "vue-router": "npm:vue-router@^4.3.0"
+    "vue-router": "npm:vue-router@^4.3.0",
+    "echarts": "npm:echarts@^5.5.0",
+    "echarts/core": "npm:echarts@^5.5.0/core",
+    "echarts/charts": "npm:echarts@^5.5.0/charts",
+    "echarts/components": "npm:echarts@^5.5.0/components",
+    "echarts/renderers": "npm:echarts@^5.5.0/renderers",
+    "vue-echarts": "npm:vue-echarts@^7.0.0"
   },
   "nodeModulesDir": "auto"
 }

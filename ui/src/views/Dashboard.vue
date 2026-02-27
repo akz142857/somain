@@ -1,34 +1,35 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MonitorCard from '../components/MonitorCard.vue';
-import Drawer from '../components/Drawer.vue';
-import AgentView from '../components/AgentView.vue';
 import { useMockService } from '../services/mockService';
 import { useProject } from '../composables/useProject';
+import { useSearch } from '../composables/useSearch';
 import type { Monitor } from '../services/mockData';
 
 const { t } = useI18n();
-const { getInfrastructure, getBusiness, startSimulation, stopSimulation } = useMockService();
-const { activeProjectId } = useProject();
+const { getInfrastructure, getBusiness, getProjects, startSimulation, stopSimulation } = useMockService();
+const { activeProjectId, activeProjectCode: projectCode } = useProject();
+const { searchQuery } = useSearch();
 
 const infrastructureMonitors = ref<Monitor[]>([]);
 const businessMonitors = ref<Monitor[]>([]);
-const isSimulating = ref(false);
 const isLoading = ref(true);
 
-const selectedMonitor = ref<Monitor | null>(null);
 const expandedMonitorId = ref<string | null>(null);
 
-const toggleSimulation = () => {
-  if (isSimulating.value) {
-    stopSimulation();
-    isSimulating.value = false;
-  } else {
-    startSimulation();
-    isSimulating.value = true;
-  }
+const filterMonitors = (monitors: Monitor[]) => {
+  if (!searchQuery.value) return monitors;
+  const q = searchQuery.value.toLowerCase();
+  return monitors.filter(m =>
+    (m.name || '').toLowerCase().includes(q) ||
+    t(m.nameKey).toLowerCase().includes(q) ||
+    m.desc.toLowerCase().includes(q)
+  );
 };
+
+const filteredInfra = computed(() => filterMonitors(infrastructureMonitors.value));
+const filteredBusiness = computed(() => filterMonitors(businessMonitors.value));
 
 const fetchData = async () => {
     isLoading.value = true;
@@ -43,10 +44,6 @@ const fetchData = async () => {
     isLoading.value = false;
 };
 
-const handleSelectMonitor = (monitor: Monitor) => {
-    selectedMonitor.value = monitor;
-};
-
 const handleToggleMonitor = (id: string) => {
   expandedMonitorId.value = expandedMonitorId.value === id ? null : id;
 };
@@ -57,25 +54,24 @@ watch(activeProjectId, () => {
 
 onMounted(async () => {
   await fetchData();
+  startSimulation();
 });
 
 onUnmounted(() => {
-    stopSimulation();
+  stopSimulation();
 });
 
 // Agent Integration
 import { useAgentContext } from '../composables/useAgentContext';
 const { setContext } = useAgentContext();
 
-// Set initial project context
-watch(activeProjectId, (newId) => {
-  setContext({ type: 'project', id: newId, name: newId === 'p1' ? 'E-Commerce Platform' : 'Internal Tools' });
+// Set project context for agent panel
+watch(activeProjectId, async (newId) => {
+  const projects = (await getProjects()).value;
+  const project = projects.find(p => p.id === newId);
+  const name = project?.rawName || (project?.nameKey ? t(project.nameKey) : projectCode.value);
+  setContext({ type: 'project', id: newId, name });
 }, { immediate: true });
-
-const handleAskAgent = (monitor: Monitor) => {
-  setContext({ type: 'monitor', id: monitor.id, name: (monitor as any).name || t(monitor.nameKey) });
-  // Optionally open agent panel if it was collapsible (it's fixed now)
-};
 </script>
 
 <template>
@@ -83,15 +79,10 @@ const handleAskAgent = (monitor: Monitor) => {
     <div class="group-header">
       <div class="group-title">
         <span>{{ t('section.infrastructure') }}</span>
-        <span class="group-count">({{ isLoading ? '...' : infrastructureMonitors.length }})</span>
-      </div>
-      <div class="group-filter">
-          <button @click="toggleSimulation" style="cursor: pointer; padding: 4px 12px; border-radius: 4px; border: 1px solid #d9d9d9; background: white;">
-              {{ isSimulating ? 'Stop Simulation' : 'Start Simulation' }}
-          </button>
+        <span class="group-count">({{ isLoading ? '...' : filteredInfra.length }})</span>
       </div>
     </div>
-    
+
     <div class="monitor-grid">
       <!-- Skeleton Loading -->
       <template v-if="isLoading">
@@ -110,7 +101,7 @@ const handleAskAgent = (monitor: Monitor) => {
 
       <MonitorCard
         v-if="!isLoading"
-        v-for="m in infrastructureMonitors"
+        v-for="m in filteredInfra"
         :key="m.id"
         class="monitor-item"
         :class="{ 'expanded': expandedMonitorId === m.id }"
@@ -125,7 +116,7 @@ const handleAskAgent = (monitor: Monitor) => {
      <div class="group-header">
       <div class="group-title">
         <span>{{ t('section.businessFlow') }}</span>
-        <span class="group-count">({{ isLoading ? '...' : businessMonitors.length }})</span>
+        <span class="group-count">({{ isLoading ? '...' : filteredBusiness.length }})</span>
       </div>
     </div>
     <div class="monitor-grid">
@@ -146,7 +137,7 @@ const handleAskAgent = (monitor: Monitor) => {
 
       <MonitorCard
         v-if="!isLoading"
-        v-for="m in businessMonitors"
+        v-for="m in filteredBusiness"
         :key="m.id"
         class="monitor-item"
         :class="{ 'expanded': expandedMonitorId === m.id }"
@@ -157,39 +148,6 @@ const handleAskAgent = (monitor: Monitor) => {
     </div>
   </div>
 
-  <!-- Monitor Detail Drawer -->
-  <Drawer
-    :visible="!!selectedMonitor"
-    :title="selectedMonitor ? ((selectedMonitor as any).name || t(selectedMonitor.nameKey)) : 'Monitor Details'"
-    @close="selectedMonitor = null"
-    @confirm="selectedMonitor = null"
-  >
-    <div v-if="selectedMonitor" class="monitor-details">
-        <div class="detail-header">
-             <div class="detail-desc">{{ selectedMonitor.desc }}</div>
-             <div class="detail-status" :class="selectedMonitor.status">{{ t(`status.${selectedMonitor.status}`) }}</div>
-        </div>
-
-        <div class="details-section">
-            <div class="section-title">{{ t('tab.events') }}</div>
-            <div class="event-list">
-            <div v-for="(event, idx) in selectedMonitor.events" :key="idx" class="event-item">
-                <div class="event-time">{{ event.time }}</div>
-                <div class="event-msg">{{ event.msg }}</div>
-            </div>
-            <div v-if="!selectedMonitor.events || selectedMonitor.events.length === 0" class="no-data">No recent events</div>
-            </div>
-        </div>
-
-        <div class="details-section" v-if="selectedMonitor.agent">
-            <div class="section-title">{{ t('tab.agent') }}</div>
-            <AgentView 
-            :steps="selectedMonitor.agent.steps"
-            :rootCause="selectedMonitor.agent.rootCause"
-            />
-        </div>
-    </div>
-  </Drawer>
 </template>
 
 <style scoped>
@@ -299,70 +257,4 @@ const handleAskAgent = (monitor: Monitor) => {
     100% { opacity: 0.6; }
 }
 
-/* Detail Styles */
-.detail-header {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.detail-desc {
-    color: #666;
-    margin-bottom: 8px;
-}
-
-.detail-status {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 500;
-}
-.detail-status.ok { color: var(--color-success); background: rgba(82, 196, 26, 0.1); }
-.detail-status.error { color: var(--color-error); background: rgba(255, 77, 79, 0.1); }
-.detail-status.slow { color: var(--color-warning); background: rgba(250, 173, 20, 0.1); }
-
-.details-section {
-    margin-bottom: 24px;
-}
-
-.section-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.event-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.event-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  color: #333;
-  padding: 8px;
-  background: #f9f9f9;
-  border-radius: 4px;
-}
-
-.event-time {
-  color: #999;
-  font-size: 12px;
-  min-width: 80px;
-}
-
-.no-data {
-  font-size: 13px;
-  color: #ccc;
-  font-style: italic;
-  text-align: center;
-  padding: 10px;
-}
 </style>

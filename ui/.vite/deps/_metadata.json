@@ -1,34 +1,82 @@
 {
-  "hash": "3e51456e",
-  "configHash": "fa9ab453",
+  "hash": "accde3c0",
+  "configHash": "fafe690a",
   "lockfileHash": "e3b0c442",
-  "browserHash": "700181f1",
+  "browserHash": "96309847",
   "optimized": {
     "vue": {
       "src": "../../node_modules/.deno/vue@3.5.23/node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "5b19c802",
+      "fileHash": "8501eec1",
       "needsInterop": false
     },
     "vue-i18n": {
       "src": "../../node_modules/.deno/vue-i18n@9.14.5/node_modules/vue-i18n/dist/vue-i18n.mjs",
       "file": "vue-i18n.js",
-      "fileHash": "1fbafa0f",
+      "fileHash": "e3461475",
       "needsInterop": false
     },
     "vue-router": {
       "src": "../../node_modules/.deno/vue-router@4.6.3/node_modules/vue-router/dist/vue-router.mjs",
       "file": "vue-router.js",
-      "fileHash": "d5253791",
+      "fileHash": "2a541b9b",
+      "needsInterop": false
+    },
+    "echarts/core": {
+      "src": "../../node_modules/.deno/echarts@5.6.0/node_modules/echarts/core.js",
+      "file": "echarts_core.js",
+      "fileHash": "ec0d2aa4",
+      "needsInterop": false
+    },
+    "echarts/charts": {
+      "src": "../../node_modules/.deno/echarts@5.6.0/node_modules/echarts/charts.js",
+      "file": "echarts_charts.js",
+      "fileHash": "04efff26",
+      "needsInterop": false
+    },
+    "echarts/renderers": {
+      "src": "../../node_modules/.deno/echarts@5.6.0/node_modules/echarts/renderers.js",
+      "file": "echarts_renderers.js",
+      "fileHash": "ed3d5e11",
+      "needsInterop": false
+    },
+    "echarts/components": {
+      "src": "../../node_modules/.deno/echarts@5.6.0/node_modules/echarts/components.js",
+      "file": "echarts_components.js",
+      "fileHash": "0ff67151",
+      "needsInterop": false
+    },
+    "vue-echarts": {
+      "src": "../../node_modules/.deno/vue-echarts@7.0.3/node_modules/vue-echarts/dist/index.js",
+      "file": "vue-echarts.js",
+      "fileHash": "b04eb1d1",
       "needsInterop": false
     }
   },
   "chunks": {
+    "chunk-RLM2Q3DY": {
+      "file": "chunk-RLM2Q3DY.js"
+    },
+    "chunk-GBPFRPTR": {
+      "file": "chunk-GBPFRPTR.js"
+    },
+    "chunk-I2Y7ZLB7": {
+      "file": "chunk-I2Y7ZLB7.js"
+    },
+    "chunk-XOLBNZUA": {
+      "file": "chunk-XOLBNZUA.js"
+    },
+    "chunk-QHVUO2TZ": {
+      "file": "chunk-QHVUO2TZ.js"
+    },
     "chunk-PVU3EYJK": {
       "file": "chunk-PVU3EYJK.js"
     },
-    "chunk-IJL6J2UP": {
-      "file": "chunk-IJL6J2UP.js"
+    "chunk-Y2IWDNWC": {
+      "file": "chunk-Y2IWDNWC.js"
+    },
+    "chunk-PZ5AY32C": {
+      "file": "chunk-PZ5AY32C.js"
     }
   }
 }

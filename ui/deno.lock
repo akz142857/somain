@@ -2,8 +2,10 @@
   "version": "5",
   "specifiers": {
     "npm:@vitejs/plugin-vue@5": "5.2.4_vite@5.4.21_vue@3.5.23",
+    "npm:echarts@^5.5.0": "5.6.0",
     "npm:vite@*": "5.4.21",
     "npm:vite@5": "5.4.21",
+    "npm:vue-echarts@7": "7.0.3_echarts@5.6.0_vue@3.5.23",
     "npm:vue-i18n@^9.9.0": "9.14.5_vue@3.5.23",
     "npm:vue-router@^4.3.0": "4.6.3_vue@3.5.23",
     "npm:vue@^3.4.0": "3.5.23"
@@ -361,6 +363,13 @@
     "csstype@3.2.3": {
       "integrity": "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ=="
     },
+    "echarts@5.6.0": {
+      "integrity": "sha512-oTbVTsXfKuEhxftHqL5xprgLoc0k7uScAwtryCgWF6hPYFLRwOUHiFmHGCBKP5NPFNkDVopOieyUqYGH8Fa3kA==",
+      "dependencies": [
+        "tslib",
+        "zrender"
+      ]
+    },
     "entities@4.5.0": {
       "integrity": "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="
     },
@@ -458,6 +467,9 @@
     "source-map-js@1.2.1": {
       "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="
     },
+    "tslib@2.3.0": {
+      "integrity": "sha512-N82ooyxVNm6h1riLCoyS9e3fuJ3AMG2zIZs2Gd1ATcSFjSA23Q0fzjjZeh0jbJvWVDZ0cJT8yaNNaaXHzueNjg=="
+    },
     "vite@5.4.21": {
       "integrity": "sha512-o5a9xKjbtuhY6Bi5S3+HvbRERmouabWbyUcpXXUA1u+GNUKoROi9byOJ8M0nHbHYHkYICiMlqxkg1KkYmm25Sw==",
       "dependencies": [
@@ -469,6 +481,22 @@
         "fsevents"
       ],
       "bin": true
+    },
+    "vue-demi@0.13.11_vue@3.5.23": {
+      "integrity": "sha512-IR8HoEEGM65YY3ZJYAjMlKygDQn25D5ajNFNoKh9RSDMQtlzCxtfQjdQgv9jjK+m3377SsJXY8ysq8kLCZL25A==",
+      "dependencies": [
+        "vue"
+      ],
+      "scripts": true,
+      "bin": true
+    },
+    "vue-echarts@7.0.3_echarts@5.6.0_vue@3.5.23": {
+      "integrity": "sha512-/jSxNwOsw5+dYAUcwSfkLwKPuzTQ0Cepz1LxCOpj2QcHrrmUa/Ql0eQqMmc1rTPQVrh2JQ29n2dhq75ZcHvRDw==",
+      "dependencies": [
+        "echarts",
+        "vue",
+        "vue-demi"
+      ]
     },
     "vue-i18n@9.14.5_vue@3.5.23": {
       "integrity": "sha512-0jQ9Em3ymWngyiIkj0+c/k7WgaPO+TNzjKSNq9BvBQaKJECqn9cd9fL4tkDhB5G1QBskGl9YxxbDAhgbFtpe2g==",
@@ -496,10 +524,18 @@
         "@vue/server-renderer",
         "@vue/shared"
       ]
+    },
+    "zrender@5.6.1": {
+      "integrity": "sha512-OFXkDJKcrlx5su2XbzJvj/34Q3m6PvyCZkVPHGYpcCJ52ek4U/ymZyfuV1nKE23AyBJ51E/6Yr0mhZ7xGTO4ag==",
+      "dependencies": [
+        "tslib"
+      ]
     }
   },
   "workspace": {
     "dependencies": [
+      "npm:echarts@^5.5.0",
+      "npm:vue-echarts@7",
       "npm:vue-i18n@^9.9.0",
       "npm:vue-router@^4.3.0",
       "npm:vue@^3.4.0"

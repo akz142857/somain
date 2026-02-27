@@ -1,15 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
 import Drawer from './Drawer.vue';
 import { useMockService } from '../services/mockService';
 import { useProject } from '../composables/useProject';
+import { useSearch } from '../composables/useSearch';
+import type { Monitor } from '../services/mockData';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
 const { addMonitor, getProjects } = useMockService();
-const { activeProjectId } = useProject();
+const { activeProjectId, activeProjectCode } = useProject();
+const { searchQuery } = useSearch();
 
 const projectName = ref('');
+
+const isSettingsPage = computed(() => route.name === 'settings');
+const isDashboard = computed(() => route.name === 'dashboard' || route.name === 'detail');
+const isAlerts = computed(() => route.name === 'alerts');
 
 const updateProjectName = async () => {
     const projects = (await getProjects()).value;
@@ -19,22 +29,13 @@ const updateProjectName = async () => {
     }
 };
 
-// Simple watch for demo: in real app, projects state might be central
-import { watch, onMounted } from 'vue';
-watch(activeProjectId, () => {
+watch(activeProjectCode, () => {
     updateProjectName();
 });
 
 onMounted(() => {
     updateProjectName();
 });
-
-const toggleLanguage = () => {
-  locale.value = locale.value === 'en' ? 'zh' : 'en';
-  document.documentElement.lang = locale.value;
-  // Re-update name in case it relies on translation
-  setTimeout(updateProjectName, 100);
-};
 
 const showAddMonitor = ref(false);
 const newMonitor = ref({
@@ -48,21 +49,11 @@ const handleAddMonitor = async () => {
    if (!newMonitor.value.name.trim()) return;
 
    await addMonitor({
-       nameKey: '', // Manual name
+       nameKey: '',
+       name: newMonitor.value.name,
        desc: newMonitor.value.desc || newMonitor.value.name,
-       type: newMonitor.value.type as any,
-// @ts-ignore
-       name: newMonitor.value.name 
+       type: newMonitor.value.type as Monitor['type'],
    }, newMonitor.value.group as 'infrastructure' | 'business', activeProjectId.value);
-
-   // Dashboard might need to know about manual names if it relies purely on t(nameKey).
-   // Let's quickly patch Dashboard to prefer name if nameKey is empty or missing.
-   // But wait, MonitorCard uses t(monitor.nameKey). If nameKey is empty string, t('') is ''.
-   // We should store the manual name in `nameKey` if we want to hack it, OR update MonitorCard to handle `name`.
-   // MockService `addMonitor` puts `nameKey: ''`.
-   // Let's rely on my previous thought: "Prefer rawName".
-   // I'll update MonitorCard in next step to support rawName/name property.
-   // For now, let's just push it.
 
    showAddMonitor.value = false;
    newMonitor.value = { name: '', desc: '', type: 'api', group: 'infrastructure' };
@@ -71,19 +62,20 @@ const handleAddMonitor = async () => {
 
 <template>
   <div class="topbar">
-    <div class="project-name">{{ t('project.ecommerce') }}</div>
-    <div class="topbar-actions">
+    <div class="topbar-left">
+      <div class="project-name">{{ isSettingsPage ? t('settings.pageTitle') : projectName }}</div>
+      <div class="tab-nav" v-if="!isSettingsPage">
+        <div class="tab" :class="{ active: isDashboard }" @click="router.push({ name: 'dashboard', params: { projectCode: activeProjectCode } })">{{ t('nav.dashboard') }}</div>
+        <div class="tab" :class="{ active: isAlerts }" @click="router.push({ name: 'alerts', params: { projectCode: activeProjectCode } })">{{ t('nav.alerts') }}</div>
+      </div>
+    </div>
+    <div class="topbar-actions" v-if="!isSettingsPage">
       <div class="search">
         <svg class="search-icon" viewBox="0 0 16 16" fill="currentColor">
           <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
         </svg>
-        <input type="text" :placeholder="t('action.search')" />
+        <input type="text" v-model="searchQuery" :placeholder="t('action.search')" />
       </div>
-      <button class="btn" @click="toggleLanguage">
-        <span style="font-size: 14px; margin-right: 4px;">文/A</span>
-        {{ locale === 'en' ? 'English' : '中文' }}
-      </button>
-      <button class="btn">{{ t('action.settings') }}</button>
       <button class="btn btn-primary" @click="showAddMonitor = true">{{ t('action.newMonitor') }}</button>
     </div>
 
@@ -96,32 +88,32 @@ const handleAddMonitor = async () => {
     >
       <div class="form-container">
         <div class="form-item">
-          <label>Name</label>
-          <input v-model="newMonitor.name" type="text" placeholder="Monitor Name" class="input" />
+          <label>{{ t('form.monitorName') }}</label>
+          <input v-model="newMonitor.name" type="text" :placeholder="t('form.monitorNamePlaceholder')" class="input" />
         </div>
         <div class="form-item">
-          <label>Description</label>
-          <textarea v-model="newMonitor.desc" placeholder="Description / URL" class="input" rows="3"></textarea>
+          <label>{{ t('form.description') }}</label>
+          <textarea v-model="newMonitor.desc" :placeholder="t('form.monitorDescPlaceholder')" class="input" rows="3"></textarea>
         </div>
         <div class="form-item">
-          <label>Type</label>
+          <label>{{ t('form.type') }}</label>
           <select v-model="newMonitor.type" class="input">
             <option value="api">API</option>
             <option value="db">Database</option>
             <option value="mq">MQ</option>
             <option value="cache">Cache</option>
             <option value="search">Search</option>
-            <option value="order">Business Flow</option>
+            <option value="order">{{ t('section.businessFlow') }}</option>
           </select>
         </div>
         <div class="form-item">
-          <label>Group</label>
+          <label>{{ t('form.group') }}</label>
           <div class="radio-group">
             <label class="radio-label">
-                <input type="radio" v-model="newMonitor.group" value="infrastructure" /> Infrastructure
+                <input type="radio" v-model="newMonitor.group" value="infrastructure" /> {{ t('section.infrastructure') }}
             </label>
             <label class="radio-label">
-                <input type="radio" v-model="newMonitor.group" value="business" /> Business Flow
+                <input type="radio" v-model="newMonitor.group" value="business" /> {{ t('section.businessFlow') }}
             </label>
           </div>
         </div>
@@ -143,9 +135,40 @@ const handleAddMonitor = async () => {
   z-index: 100;
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
 .project-name {
   font-size: 18px;
   font-weight: 600;
+}
+
+.tab-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  color: #333;
+  background: #f5f5f5;
+}
+
+.tab.active {
+  color: var(--color-primary);
+  background: #e6f7ff;
+  font-weight: 500;
 }
 
 .topbar-actions {

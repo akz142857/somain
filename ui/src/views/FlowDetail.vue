@@ -1,23 +1,47 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useMockService } from '../services/mockService';
 import FlowVisualization from '../components/FlowVisualization.vue';
 import StepDetailPanel from '../components/StepDetailPanel.vue';
-import type { FlowStepDetail, HistorySnapshot } from '../services/mockData';
+import MetricsChart from '../components/MetricsChart.vue';
+import LogViewer from '../components/LogViewer.vue';
+import type { FlowStepDetail, HistorySnapshot, MetricSeries } from '../services/mockData';
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
-const { getMonitorById } = useMockService();
+const { getMonitorById, getMonitorMetricSeries } = useMockService();
 
 const monitorId = route.params.monitorId as string;
 const monitor = computed(() => getMonitorById(monitorId));
 
+// Redirect if monitor not found
+watch(monitor, (m) => {
+  if (!m) {
+    const projectCode = route.params.projectCode as string;
+    router.replace({ name: 'dashboard', params: { projectCode } });
+  }
+}, { immediate: true });
+
 const selectedStepIndex = ref<number | null>(null);
 const selectedHistoryIndex = ref<number | null>(null);
 const eventFilter = ref<'all' | 'errors'>('all');
+const bottomTab = ref<'events' | 'logs' | 'agent'>('events');
+
+// Chart state
+const chartSeries = ref<MetricSeries[]>([]);
+const chartRange = ref('1h');
+
+const loadChartData = async (range: string) => {
+  chartRange.value = range;
+  chartSeries.value = await getMonitorMetricSeries(monitorId, range);
+};
+
+onMounted(() => {
+  loadChartData('1h');
+});
 
 // Time labels for each history block (3-min intervals ending at 14:25)
 const historyTimeLabels = [
@@ -80,7 +104,8 @@ const handleSelectStep = (index: number) => {
 };
 
 const goBack = () => {
-  router.push({ name: 'dashboard' });
+  const projectCode = route.params.projectCode as string;
+  router.push({ name: 'dashboard', params: { projectCode } });
 };
 
 const getEventStatusClass = (event: { flow?: { name: string; status: 'ok' | 'error' }[] }) => {
@@ -114,6 +139,18 @@ const getEventStatusClass = (event: { flow?: { name: string; status: 'ok' | 'err
           <span class="metric-value">{{ monitor.flowSteps.length }}</span>
         </div>
       </div>
+    </div>
+
+    <!-- Metrics Chart -->
+    <div class="section">
+      <div class="section-title">{{ t('chart.metricsChart') }}</div>
+      <MetricsChart
+        v-if="chartSeries.length"
+        :series="chartSeries"
+        :selected-range="chartRange"
+        show-time-range-selector
+        @range-change="loadChartData"
+      />
     </div>
 
     <!-- History Status Bar -->
@@ -152,45 +189,58 @@ const getEventStatusClass = (event: { flow?: { name: string; status: 'ok' | 'err
       <div class="select-hint">{{ t('flow.selectStep') }}</div>
     </div>
 
-    <!-- Events -->
+    <!-- Bottom Tabs: Events / Logs / Agent -->
     <div class="section">
-      <div class="section-title">{{ t('flow.eventsTitle') }}</div>
-      <div class="event-filters">
-        <button
-          class="filter-btn"
-          :class="{ active: eventFilter === 'all' }"
-          @click="eventFilter = 'all'"
-        >{{ t('flow.filterAll') }}</button>
-        <button
-          class="filter-btn"
-          :class="{ active: eventFilter === 'errors' }"
-          @click="eventFilter = 'errors'"
-        >{{ t('flow.filterErrors') }}</button>
+      <div class="bottom-tabs">
+        <div class="bottom-tab" :class="{ active: bottomTab === 'events' }" @click="bottomTab = 'events'">{{ t('flow.eventsTitle') }}</div>
+        <div class="bottom-tab" :class="{ active: bottomTab === 'logs' }" @click="bottomTab = 'logs'">{{ t('tab.logs') }}</div>
+        <div class="bottom-tab" :class="{ active: bottomTab === 'agent' }" @click="bottomTab = 'agent'">{{ t('flow.agentTitle') }}</div>
       </div>
-      <div class="events-list">
-        <div
-          v-for="(ev, idx) in filteredEvents"
-          :key="idx"
-          class="event-row"
-          :class="getEventStatusClass(ev)"
-        >
-          <span class="event-time">{{ ev.time }}</span>
-          <span class="event-id" v-if="ev.id">{{ ev.id }}</span>
-          <span class="event-msg">{{ ev.msg }}</span>
-          <span class="event-status-tag" v-if="ev.flow?.some(f => f.status === 'error')">ERROR</span>
-          <span class="event-status-tag ok" v-else-if="ev.flow">OK</span>
-        </div>
-        <div v-if="filteredEvents.length === 0" class="empty-state">{{ t('flow.noEvents') }}</div>
-      </div>
-    </div>
 
-    <!-- Agent Analysis -->
-    <div class="section" v-if="activeAgent?.rootCause">
-      <div class="section-title">{{ t('flow.agentTitle') }}</div>
-      <div class="agent-card">
-        <div class="agent-label">{{ activeAgent.rootCause.title }}</div>
-        <div class="agent-desc">{{ activeAgent.rootCause.desc }}</div>
-        <div v-if="activeAgent.rootCause.confidence" class="agent-confidence">{{ activeAgent.rootCause.confidence }}</div>
+      <!-- Events Tab -->
+      <div v-if="bottomTab === 'events'">
+        <div class="event-filters">
+          <button
+            class="filter-btn"
+            :class="{ active: eventFilter === 'all' }"
+            @click="eventFilter = 'all'"
+          >{{ t('flow.filterAll') }}</button>
+          <button
+            class="filter-btn"
+            :class="{ active: eventFilter === 'errors' }"
+            @click="eventFilter = 'errors'"
+          >{{ t('flow.filterErrors') }}</button>
+        </div>
+        <div class="events-list">
+          <div
+            v-for="(ev, idx) in filteredEvents"
+            :key="idx"
+            class="event-row"
+            :class="getEventStatusClass(ev)"
+          >
+            <span class="event-time">{{ ev.time }}</span>
+            <span class="event-id" v-if="ev.id">{{ ev.id }}</span>
+            <span class="event-msg">{{ ev.msg }}</span>
+            <span class="event-status-tag" v-if="ev.flow?.some(f => f.status === 'error')">ERROR</span>
+            <span class="event-status-tag ok" v-else-if="ev.flow">OK</span>
+          </div>
+          <div v-if="filteredEvents.length === 0" class="empty-state">{{ t('flow.noEvents') }}</div>
+        </div>
+      </div>
+
+      <!-- Logs Tab -->
+      <div v-if="bottomTab === 'logs'">
+        <LogViewer :monitor-id="monitorId" />
+      </div>
+
+      <!-- Agent Tab -->
+      <div v-if="bottomTab === 'agent'">
+        <div v-if="activeAgent?.rootCause" class="agent-card">
+          <div class="agent-label">{{ activeAgent.rootCause.title }}</div>
+          <div class="agent-desc">{{ activeAgent.rootCause.desc }}</div>
+          <div v-if="activeAgent.rootCause.confidence" class="agent-confidence">{{ activeAgent.rootCause.confidence }}</div>
+        </div>
+        <div v-else class="empty-state">{{ t('flow.noEvents') }}</div>
       </div>
     </div>
   </div>
@@ -363,6 +413,33 @@ const getEventStatusClass = (event: { flow?: { name: string; status: 'ok' | 'err
   text-align: center;
   font-size: 13px;
   color: #bbb;
+}
+
+/* Bottom Tabs */
+.bottom-tabs {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.bottom-tab {
+  font-size: 14px;
+  color: #999;
+  cursor: pointer;
+  padding-bottom: 10px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.bottom-tab:hover {
+  color: #666;
+}
+
+.bottom-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
 }
 
 /* Events */

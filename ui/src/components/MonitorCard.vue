@@ -3,13 +3,16 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AgentView from './AgentView.vue';
+import { useProject } from '../composables/useProject';
 
 const router = useRouter();
+const { activeProjectCode } = useProject();
 
 const props = defineProps<{
   monitor: {
     id: string;
-    nameKey: string; // i18n key
+    nameKey: string;
+    name?: string;
     desc: string;
     status: 'ok' | 'error' | 'slow';
     type: 'api' | 'mq' | 'search' | 'order' | 'db' | 'cache';
@@ -47,6 +50,7 @@ const switchTab = (tab: string, event: Event) => {
   event.stopPropagation();
   activeTab.value = tab;
 };
+
 </script>
 
 <template>
@@ -58,7 +62,7 @@ const switchTab = (tab: string, event: Event) => {
          <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="10"/></svg>
       </div>
       <div class="card-info">
-        <div class="card-name">{{ (monitor as any).name || t(monitor.nameKey) }}</div>
+        <div class="card-name">{{ monitor.name || t(monitor.nameKey) }}</div>
         <div class="card-desc">{{ monitor.desc }}</div>
       </div>
       <div class="card-status" :class="monitor.status">{{ t(statusText) }}</div>
@@ -103,7 +107,7 @@ const switchTab = (tab: string, event: Event) => {
         </div>
         <div
           class="tab-item tab-detail"
-          @click="router.push({ name: 'detail', params: { monitorId: monitor.id } })"
+          @click="router.push({ name: 'detail', params: { projectCode: activeProjectCode, monitorId: monitor.id } })"
         >
           {{ t('flow.viewDetail') }} →
         </div>
@@ -130,18 +134,22 @@ const switchTab = (tab: string, event: Event) => {
              <span class="event-time">{{ ev.time }}</span>
              <span class="event-msg">{{ ev.msg }}</span>
            </div>
-           <div v-if="!monitor.events?.length" class="empty-state">No recent events</div>
+           <div v-if="!monitor.events?.length" class="empty-state">{{ t('flow.noEvents') }}</div>
         </div>
 
         <!-- Config Tab -->
         <div v-if="activeTab === 'config'" class="config-pane">
           <div class="config-row">
-            <span class="label">Endpoint:</span>
-            <span class="value">https://api.example.com</span>
+            <span class="label">{{ t('flow.endpoint') }}:</span>
+            <span class="value">{{ monitor.desc }}</span>
           </div>
           <div class="config-row">
-            <span class="label">Timeout:</span>
-            <span class="value">5000ms</span>
+            <span class="label">{{ t('form.type') }}:</span>
+            <span class="value">{{ monitor.type.toUpperCase() }}</span>
+          </div>
+          <div v-for="(metric, idx) in monitor.metrics" :key="idx" class="config-row">
+            <span class="label">{{ t(metric.labelKey) }}:</span>
+            <span class="value">{{ metric.value }}</span>
           </div>
         </div>
       </div>
@@ -259,7 +267,6 @@ const switchTab = (tab: string, event: Event) => {
 }
 
 .metric-value.bad { color: var(--color-error); }
-.flow-step.error::before { content: '✗'; color: var(--color-error); margin-right: 2px; }
 
 .action-btns { display: flex; gap: 8px; margin-top: 16px; }
 

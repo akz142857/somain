@@ -47,7 +47,7 @@ const handleSelect = (monitor: MonitorItem) => {
   <div v-if="isOpen" class="monitor-selector-overlay" @click.self="emit('close')">
     <div class="monitor-selector-modal">
       <div class="modal-header">
-        <h3>{{ t('agent.selectMonitor', 'Select Monitor') }}</h3>
+        <h3>{{ t('form.selectMonitor') }}</h3>
         <button class="close-btn" @click="emit('close')">×</button>
       </div>
       
@@ -55,7 +55,7 @@ const handleSelect = (monitor: MonitorItem) => {
         <input 
           v-model="searchQuery" 
           class="search-input" 
-          :placeholder="t('agent.searchMonitors', 'Search monitors...')"
+          :placeholder="t('form.searchMonitors')"
           autofocus
         />
         
@@ -67,7 +67,7 @@ const handleSelect = (monitor: MonitorItem) => {
                 :class="{ active: filterStatus === status }"
                 @click="filterStatus = status as any"
             >
-                {{ status === 'all' ? 'All' : status === 'error' ? '🔴 Error' : status === 'slow' ? '🟠 Slow' : '🟢 OK' }}
+                {{ status === 'all' ? t('flow.filterAll') : status === 'error' ? t('status.error') : status === 'slow' ? t('status.slow') : t('status.ok') }}
             </button>
         </div>
       </div>
@@ -95,12 +95,12 @@ const handleSelect = (monitor: MonitorItem) => {
             </div>
           </div>
           <div class="monitor-action">
-            <button class="select-btn">Select</button>
+            <button class="select-btn">{{ t('action.select') }}</button>
           </div>
         </div>
         
         <div v-if="filteredMonitors.length === 0" class="empty-list">
-            No monitors found matching your criteria.
+            {{ t('form.noMatches') }}
         </div>
       </div>
     </div>

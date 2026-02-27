@@ -5,11 +5,13 @@ import AgentPanel from './components/AgentPanel.vue';
 import { useI18n } from 'vue-i18n';
 import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useSyncProjectRoute } from './composables/useProject';
 
 const { locale } = useI18n();
 const route = useRoute();
+useSyncProjectRoute();
 
-const isFlowDetail = computed(() => route.name === 'detail');
+const isFullWidth = computed(() => route.name === 'settings');
 
 const toggleLanguage = () => {
   locale.value = locale.value === 'en' ? 'zh' : 'en';
@@ -29,13 +31,13 @@ onMounted(() => {
 <template>
   <div class="app-layout">
     <Sidebar />
-    <div class="main" :class="{ 'full-width': isFlowDetail }">
+    <div class="main" :class="{ 'full-width': isFullWidth }">
       <TopBar />
       <div class="content">
         <router-view />
       </div>
     </div>
-    <AgentPanel v-if="!isFlowDetail" />
+    <AgentPanel v-if="!isFullWidth" />
   </div>
 </template>
 

@@ -4,25 +4,38 @@
     },
     "project": {
         "ecommerce": "电商主站",
-        "payment": "Payment",
-        "user": "User Center"
+        "payment": "支付系统",
+        "user": "用户中心"
+    },
+    "agent": {
+        "placeholder": "随便问点什么...",
+        "title": "Agent AI",
+        "emptyGreeting": "关于 {name}，我能帮你什么？",
+        "shareTab": "共享当前标签页",
+        "currentTab": "当前标签页"
     },
     "action": {
         "search": "搜索...",
         "newProject": "+ 新建项目",
         "settings": "设置",
-        "newMonitor": "+ 新建监控"
+        "newMonitor": "+ 新建监控",
+        "cancel": "取消",
+        "confirm": "确认",
+        "select": "选择"
     },
     "status": {
         "normal": "正常",
         "error": "异常",
-        "slow": "慢响应"
+        "slow": "慢响应",
+        "ok": "正常",
+        "pending": "等待中"
     },
     "tab": {
         "events": "最近事件",
         "agent": "Agent 诊断",
         "config": "配置",
-        "failures": "失败记录"
+        "failures": "失败记录",
+        "logs": "日志"
     },
     "metric": {
         "uptime": "可用率",
@@ -42,6 +55,7 @@
     "monitor": {
         "apiGateway": "API 网关",
         "rabbitmq": "RabbitMQ",
+        "elasticsearch": "ElasticSearch",
         "orderFlow": "订单流程"
     },
     "flow": {
@@ -65,5 +79,100 @@
         "agentTitle": "Agent 分析",
         "selectStep": "点击步骤查看详情",
         "noEvents": "暂无事件"
+    },
+    "sidebar": {
+        "projects": "项目"
+    },
+    "nav": {
+        "dashboard": "仪表盘",
+        "alerts": "告警管理",
+        "settings": "设置"
+    },
+    "settings": {
+        "pageTitle": "设置",
+        "language": "语言",
+        "languageDesc": "选择界面显示语言",
+        "general": "通用",
+        "simulation": "数据模拟",
+        "simulationDesc": "每 3 秒自动更新监控状态",
+        "theme": "主题",
+        "themeDesc": "当前主题配置",
+        "about": "关于",
+        "version": "版本"
+    },
+    "alert": {
+        "pageTitle": "告警管理",
+        "rules": "告警规则",
+        "channels": "通知渠道",
+        "history": "告警历史",
+        "addRule": "添加规则",
+        "editRule": "编辑规则",
+        "addChannel": "添加渠道",
+        "ruleName": "规则名称",
+        "monitor": "监控对象",
+        "metric": "指标",
+        "operator": "运算符",
+        "threshold": "阈值",
+        "severity": "严重程度",
+        "status": "状态",
+        "actions": "操作",
+        "critical": "严重",
+        "warning": "警告",
+        "info": "信息",
+        "enabled": "已启用",
+        "disabled": "已禁用",
+        "firing": "告警中",
+        "resolved": "已恢复",
+        "channelName": "渠道名称",
+        "channelType": "类型",
+        "feishu": "飞书",
+        "webhook": "Webhook",
+        "email": "邮件",
+        "config": "配置",
+        "webhookUrl": "Webhook 地址",
+        "emailAddress": "邮箱地址",
+        "notifyChannels": "通知渠道",
+        "noRules": "暂无告警规则",
+        "noChannels": "暂无通知渠道",
+        "noEvents": "暂无告警事件",
+        "firedAt": "触发时间",
+        "resolvedAt": "恢复时间",
+        "value": "当前值",
+        "deleteConfirm": "确定删除吗？"
+    },
+    "log": {
+        "title": "日志",
+        "all": "全部",
+        "error": "错误",
+        "warn": "警告",
+        "info": "信息",
+        "debug": "调试",
+        "search": "搜索日志...",
+        "source": "来源",
+        "traceId": "链路 ID",
+        "noLogs": "暂无日志"
+    },
+    "form": {
+        "projectName": "项目名称",
+        "projectNamePlaceholder": "如：财务系统",
+        "description": "描述",
+        "descPlaceholder": "简短描述",
+        "monitorName": "名称",
+        "monitorNamePlaceholder": "监控名称",
+        "monitorDescPlaceholder": "描述 / URL",
+        "type": "类型",
+        "group": "分组",
+        "noMatches": "没有找到匹配的监控。",
+        "searchMonitors": "搜索监控...",
+        "selectMonitor": "选择监控",
+        "viewAllMonitors": "查看全部监控..."
+    },
+    "chart": {
+        "timeRange": "时间范围",
+        "1h": "1小时",
+        "6h": "6小时",
+        "24h": "24小时",
+        "7d": "7天",
+        "metricsChart": "指标图表"
     }
 }

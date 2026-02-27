@@ -1,5 +1,6 @@
 export interface Project {
     id: string;
+    code: string; // URL-friendly slug
     nameKey: string; // Using nameKey for i18n, but simulate dynamic ones having raw names
     rawName?: string;
     desc?: string; // New field for UX
@@ -7,9 +8,9 @@ export interface Project {
 }
 
 export const initialProjects: Project[] = [
-    { id: '1', nameKey: 'project.ecommerce', status: 'error' },
-    { id: '2', nameKey: 'project.payment', status: 'ok' },
-    { id: '3', nameKey: 'project.user', status: 'warning' }
+    { id: '1', code: 'ecommerce', nameKey: 'project.ecommerce', status: 'error' },
+    { id: '2', code: 'payment', nameKey: 'project.payment', status: 'ok' },
+    { id: '3', code: 'user-center', nameKey: 'project.user', status: 'warning' }
 ];
 
 export interface MonitorMetric {
@@ -51,8 +52,9 @@ export interface HistorySnapshot {
 
 export interface Monitor {
     id: string;
-    projectId: string; // New field
+    projectId: string;
     nameKey: string;
+    name?: string; // Manual name (used when nameKey is empty)
     desc: string;
     status: 'ok' | 'error' | 'slow';
     type: 'api' | 'mq' | 'search' | 'order' | 'db' | 'cache';
@@ -111,7 +113,7 @@ export const initialInfrastructure: Monitor[] = [
     {
         id: 'elasticsearch',
         projectId: '1',
-        nameKey: 'ElasticSearch',
+        nameKey: 'monitor.elasticsearch',
         desc: '192.168.1.103:9200',
         status: 'slow',
         type: 'search',
@@ -129,6 +131,212 @@ export const initialInfrastructure: Monitor[] = [
                 desc: 'Large shard relocation in progress on node es-01.'
             }
         }
+    }
+];
+
+// Time-series types
+export interface TimeSeriesPoint {
+    time: string;
+    value: number;
+}
+
+export interface MetricSeries {
+    metricKey: string;
+    unit: string;
+    data: TimeSeriesPoint[];
+}
+
+// Log types
+export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+
+export interface LogEntry {
+    id: string;
+    time: string;
+    level: LogLevel;
+    message: string;
+    source: string;
+    traceId?: string;
+}
+
+// Alert types
+export type AlertSeverity = 'critical' | 'warning' | 'info';
+export type AlertRuleStatus = 'enabled' | 'disabled';
+export type AlertEventStatus = 'firing' | 'resolved';
+export type AlertChannelType = 'feishu' | 'webhook' | 'email';
+
+export interface AlertRule {
+    id: string;
+    name: string;
+    monitorId: string;
+    monitorName: string;
+    metricKey: string;
+    operator: '>' | '<' | '>=' | '<=' | '==';
+    threshold: number;
+    unit: string;
+    severity: AlertSeverity;
+    status: AlertRuleStatus;
+    channelIds: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface AlertChannel {
+    id: string;
+    name: string;
+    type: AlertChannelType;
+    config: Record<string, string>;
+    createdAt: string;
+}
+
+export interface AlertEvent {
+    id: string;
+    ruleId: string;
+    ruleName: string;
+    monitorId: string;
+    monitorName: string;
+    severity: AlertSeverity;
+    status: AlertEventStatus;
+    message: string;
+    value: number;
+    threshold: number;
+    firedAt: string;
+    resolvedAt?: string;
+}
+
+export const initialAlertRules: AlertRule[] = [
+    {
+        id: 'rule-1',
+        name: 'API Gateway High Latency',
+        monitorId: 'api-gateway',
+        monitorName: 'API Gateway',
+        metricKey: 'latency',
+        operator: '>',
+        threshold: 200,
+        unit: 'ms',
+        severity: 'warning',
+        status: 'enabled',
+        channelIds: ['ch-1'],
+        createdAt: '2026-02-25T10:00:00Z',
+        updatedAt: '2026-02-25T10:00:00Z'
+    },
+    {
+        id: 'rule-2',
+        name: 'RabbitMQ Down',
+        monitorId: 'rabbitmq',
+        monitorName: 'RabbitMQ',
+        metricKey: 'uptime',
+        operator: '<',
+        threshold: 50,
+        unit: '%',
+        severity: 'critical',
+        status: 'enabled',
+        channelIds: ['ch-1', 'ch-2'],
+        createdAt: '2026-02-24T08:30:00Z',
+        updatedAt: '2026-02-26T14:00:00Z'
+    },
+    {
+        id: 'rule-3',
+        name: 'Order Flow Success Rate Low',
+        monitorId: 'order-flow',
+        monitorName: 'Order Flow',
+        metricKey: 'successRate',
+        operator: '<',
+        threshold: 95,
+        unit: '%',
+        severity: 'critical',
+        status: 'enabled',
+        channelIds: ['ch-1'],
+        createdAt: '2026-02-23T12:00:00Z',
+        updatedAt: '2026-02-23T12:00:00Z'
+    },
+    {
+        id: 'rule-4',
+        name: 'ElasticSearch Slow Query',
+        monitorId: 'elasticsearch',
+        monitorName: 'ElasticSearch',
+        metricKey: 'latency',
+        operator: '>',
+        threshold: 500,
+        unit: 'ms',
+        severity: 'info',
+        status: 'disabled',
+        channelIds: ['ch-2'],
+        createdAt: '2026-02-22T09:00:00Z',
+        updatedAt: '2026-02-22T09:00:00Z'
+    }
+];
+
+export const initialAlertChannels: AlertChannel[] = [
+    {
+        id: 'ch-1',
+        name: 'Ops Feishu Group',
+        type: 'feishu',
+        config: { webhookUrl: 'https://open.feishu.cn/open-apis/bot/v2/hook/xxx' },
+        createdAt: '2026-02-20T08:00:00Z'
+    },
+    {
+        id: 'ch-2',
+        name: 'PagerDuty Webhook',
+        type: 'webhook',
+        config: { url: 'https://events.pagerduty.com/v2/enqueue', secret: 'pd-secret-xxx' },
+        createdAt: '2026-02-21T10:00:00Z'
+    }
+];
+
+export const initialAlertEvents: AlertEvent[] = [
+    {
+        id: 'evt-1',
+        ruleId: 'rule-2',
+        ruleName: 'RabbitMQ Down',
+        monitorId: 'rabbitmq',
+        monitorName: 'RabbitMQ',
+        severity: 'critical',
+        status: 'firing',
+        message: 'RabbitMQ uptime dropped to 20%, below threshold 50%',
+        value: 20,
+        threshold: 50,
+        firedAt: '2026-02-27T14:10:00Z'
+    },
+    {
+        id: 'evt-2',
+        ruleId: 'rule-3',
+        ruleName: 'Order Flow Success Rate Low',
+        monitorId: 'order-flow',
+        monitorName: 'Order Flow',
+        severity: 'critical',
+        status: 'firing',
+        message: 'Order success rate at 87%, below threshold 95%',
+        value: 87,
+        threshold: 95,
+        firedAt: '2026-02-27T14:05:00Z'
+    },
+    {
+        id: 'evt-3',
+        ruleId: 'rule-1',
+        ruleName: 'API Gateway High Latency',
+        monitorId: 'api-gateway',
+        monitorName: 'API Gateway',
+        severity: 'warning',
+        status: 'resolved',
+        message: 'API Gateway latency spiked to 320ms, above threshold 200ms',
+        value: 320,
+        threshold: 200,
+        firedAt: '2026-02-27T12:30:00Z',
+        resolvedAt: '2026-02-27T12:45:00Z'
+    },
+    {
+        id: 'evt-4',
+        ruleId: 'rule-4',
+        ruleName: 'ElasticSearch Slow Query',
+        monitorId: 'elasticsearch',
+        monitorName: 'ElasticSearch',
+        severity: 'info',
+        status: 'resolved',
+        message: 'ElasticSearch latency reached 850ms, above threshold 500ms',
+        value: 850,
+        threshold: 500,
+        firedAt: '2026-02-27T11:00:00Z',
+        resolvedAt: '2026-02-27T11:20:00Z'
     }
 ];
 

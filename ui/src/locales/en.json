@@ -7,22 +7,35 @@
         "payment": "Payment",
         "user": "User Center"
     },
+    "agent": {
+        "placeholder": "Ask anything...",
+        "title": "Agent AI",
+        "emptyGreeting": "How can I help you regarding {name}?",
+        "shareTab": "Share current tab",
+        "currentTab": "Current tab"
+    },
     "action": {
         "search": "Search...",
         "newProject": "New Project",
         "settings": "Settings",
-        "newMonitor": "New Monitor"
+        "newMonitor": "New Monitor",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "select": "Select"
     },
     "status": {
         "normal": "Normal",
         "error": "Error",
-        "slow": "Slow Response"
+        "slow": "Slow Response",
+        "ok": "OK",
+        "pending": "Pending"
     },
     "tab": {
         "events": "Events",
         "agent": "Agent AI",
         "config": "Config",
-        "failures": "Failures"
+        "failures": "Failures",
+        "logs": "Logs"
     },
     "metric": {
         "uptime": "Uptime",
@@ -42,6 +55,7 @@
     "monitor": {
         "apiGateway": "API Gateway",
         "rabbitmq": "RabbitMQ",
+        "elasticsearch": "ElasticSearch",
         "orderFlow": "Order Flow"
     },
     "flow": {
@@ -65,5 +79,100 @@
         "agentTitle": "Agent Analysis",
         "selectStep": "Click a step to view details",
         "noEvents": "No events"
+    },
+    "sidebar": {
+        "projects": "Projects"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "alerts": "Alerts",
+        "settings": "Settings"
+    },
+    "settings": {
+        "pageTitle": "Settings",
+        "language": "Language",
+        "languageDesc": "Choose your preferred display language",
+        "general": "General",
+        "simulation": "Data Simulation",
+        "simulationDesc": "Auto-update monitor status every 3 seconds",
+        "theme": "Theme",
+        "themeDesc": "Current theme configuration",
+        "about": "About",
+        "version": "Version"
+    },
+    "alert": {
+        "pageTitle": "Alert Management",
+        "rules": "Rules",
+        "channels": "Channels",
+        "history": "History",
+        "addRule": "Add Rule",
+        "editRule": "Edit Rule",
+        "addChannel": "Add Channel",
+        "ruleName": "Rule Name",
+        "monitor": "Monitor",
+        "metric": "Metric",
+        "operator": "Operator",
+        "threshold": "Threshold",
+        "severity": "Severity",
+        "status": "Status",
+        "actions": "Actions",
+        "critical": "Critical",
+        "warning": "Warning",
+        "info": "Info",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "firing": "Firing",
+        "resolved": "Resolved",
+        "channelName": "Channel Name",
+        "channelType": "Type",
+        "feishu": "Feishu",
+        "webhook": "Webhook",
+        "email": "Email",
+        "config": "Configuration",
+        "webhookUrl": "Webhook URL",
+        "emailAddress": "Email Address",
+        "notifyChannels": "Notify Channels",
+        "noRules": "No alert rules",
+        "noChannels": "No notification channels",
+        "noEvents": "No alert events",
+        "firedAt": "Fired At",
+        "resolvedAt": "Resolved At",
+        "value": "Value",
+        "deleteConfirm": "Are you sure?"
+    },
+    "log": {
+        "title": "Logs",
+        "all": "All",
+        "error": "Error",
+        "warn": "Warn",
+        "info": "Info",
+        "debug": "Debug",
+        "search": "Search logs...",
+        "source": "Source",
+        "traceId": "Trace ID",
+        "noLogs": "No logs found"
+    },
+    "form": {
+        "projectName": "Project Name",
+        "projectNamePlaceholder": "e.g. Finance System",
+        "description": "Description",
+        "descPlaceholder": "Short description",
+        "monitorName": "Name",
+        "monitorNamePlaceholder": "Monitor Name",
+        "monitorDescPlaceholder": "Description / URL",
+        "type": "Type",
+        "group": "Group",
+        "noMatches": "No monitors found matching your criteria.",
+        "searchMonitors": "Search monitors...",
+        "selectMonitor": "Select Monitor",
+        "viewAllMonitors": "View all monitors..."
+    },
+    "chart": {
+        "timeRange": "Time Range",
+        "1h": "1H",
+        "6h": "6H",
+        "24h": "24H",
+        "7d": "7D",
+        "metricsChart": "Metrics Chart"
     }
 }

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
   visible: boolean;
@@ -23,8 +25,8 @@ const confirm = () => emit('confirm');
         <slot></slot>
       </div>
       <div class="drawer-footer">
-        <button class="btn" @click="close">Cancel</button>
-        <button class="btn btn-primary" @click="confirm">Confirm</button>
+        <button class="btn" @click="close">{{ t('action.cancel') }}</button>
+        <button class="btn btn-primary" @click="confirm">{{ t('action.confirm') }}</button>
       </div>
     </div>
   </div>

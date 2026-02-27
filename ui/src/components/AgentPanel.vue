@@ -129,10 +129,9 @@ const handleSelectMonitor = (monitor: any) => {
 
 const handleSend = () => {
   if (!inputMessage.value.trim()) return;
-  const content = inputMessage.value;
-  if (isContextShared.value) {
-    // Append context info strictly for logic, or just send message
-    // For now, let's keep it simple
+  let content = inputMessage.value;
+  if (isContextShared.value && context.value) {
+    content = `[${context.value.type}: ${context.value.name}] ${content}`;
   }
   sendMessage(content);
   inputMessage.value = '';
@@ -185,7 +184,7 @@ const handleRemoveContext = () => {
     <div class="agent-header">
       <div class="header-title">
         <span class="icon">🤖</span>
-        <span>Agent AI</span>
+        <span>{{ t('agent.title') }}</span>
       </div>
       <div v-if="context" class="context-badge">
         {{ context.type === 'project' ? 'Project' : 'Monitor' }}: {{ context.name }}
@@ -196,7 +195,7 @@ const handleRemoveContext = () => {
       <div class="chat-history">
         <div v-if="messages.length === 0" class="empty-state">
           <div class="empty-icon">👋</div>
-          <div class="empty-text">How can I help you regarding {{ context ? context.name : 'this project' }}?</div>
+          <div class="empty-text">{{ t('agent.emptyGreeting', { name: context ? context.name : '' }) }}</div>
         </div>
         
         <div 
@@ -214,18 +213,15 @@ const handleRemoveContext = () => {
         <div class="input-context-actions">
            <div v-if="isContextShared" class="context-chip">
              <span class="chip-icon">S</span>
-             <span>Current tab</span>
+             <span>{{ t('agent.currentTab') }}</span>
              <button class="chip-close" @click="handleRemoveContext">×</button>
            </div>
            
            <button v-else class="context-btn" @click="handleShareTab">
              <span class="icon">📑</span>
-             Share current tab
+             {{ t('agent.shareTab') }}
            </button>
            
-           <button class="context-btn icon-only" title="Add Attachment">
-             +
-           </button>
         </div>
 
         <div class="input-wrapper">
@@ -262,7 +258,7 @@ const handleRemoveContext = () => {
             
             <div v-if="suggestionType === 'monitor'" class="suggestion-footer">
                 <div class="suggestion-item footer-item" @click="showMonitorSelector = true">
-                    <span class="icon">📋</span> View all monitors...
+                    <span class="icon">📋</span> {{ t('form.viewAllMonitors') }}
                 </div>
             </div>
           </div>

@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
 import { useMockService } from '../services/mockService';
 import { useProject } from '../composables/useProject';
 import type { Project } from '../services/mockData';
 import Modal from './Modal.vue';
 
 const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
 const { getProjects, addProject } = useMockService();
-const { activeProjectId } = useProject();
+const { activeProjectCode } = useProject();
+
+const isSettingsActive = computed(() => route.name === 'settings');
 
 const projects = ref<Project[]>([]);
 const showAddModal = ref(false);
@@ -25,14 +30,19 @@ onMounted(() => {
 
 const handleAddProject = async () => {
     if (!newProjectName.value.trim()) return;
-    await addProject(newProjectName.value, newProjectDesc.value);
+    const code = await addProject(newProjectName.value, newProjectDesc.value);
     showAddModal.value = false;
     newProjectName.value = '';
     newProjectDesc.value = '';
+    router.push({ name: 'dashboard', params: { projectCode: code } });
 };
 
-const selectProject = (id: string) => {
-    activeProjectId.value = id;
+const selectProject = (code: string) => {
+    if (route.name === 'alerts') {
+        router.push({ name: 'alerts', params: { projectCode: code } });
+    } else {
+        router.push({ name: 'dashboard', params: { projectCode: code } });
+    }
 };
 
 const getInitials = (p: Project) => {
@@ -48,14 +58,15 @@ const getInitials = (p: Project) => {
       <span class="logo-text">{{ t('app.name') }}</span>
     </div>
 
-    <!-- Dynamic Projects -->
+    <!-- Projects Section -->
+    <div class="section-label">{{ t('sidebar.projects') }}</div>
     <div class="projects-list">
         <div
         v-for="p in projects"
         :key="p.id"
         class="project-item"
-        :class="{ active: activeProjectId === p.id }"
-        @click="selectProject(p.id)"
+        :class="{ active: activeProjectCode === p.code }"
+        @click="selectProject(p.code)"
         >
         <div class="project-icon" :class="p.status">{{ getInitials(p) }}</div>
         <div class="project-info">
@@ -63,11 +74,17 @@ const getInitials = (p: Project) => {
             <div v-if="p.desc" class="project-desc">{{ p.desc }}</div>
         </div>
         </div>
+
+        <div class="add-btn-inline" @click="showAddModal = true">
+          <span class="plus-icon">+</span> {{ t('action.newProject') }}
+        </div>
     </div>
 
-    <button class="add-btn" @click="showAddModal = true">
-        <span class="plus-icon">+</span> {{ t('action.newProject') }}
-    </button>
+    <!-- Settings (bottom) -->
+    <div class="settings-item" :class="{ active: isSettingsActive }" @click="router.push({ name: 'settings' })">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>
+      <span>{{ t('nav.settings') }}</span>
+    </div>
 
     <Modal
       :visible="showAddModal"
@@ -76,12 +93,12 @@ const getInitials = (p: Project) => {
       @confirm="handleAddProject"
     >
       <div class="form-item">
-        <label>Project Name</label>
-        <input v-model="newProjectName" type="text" placeholder="e.g. Finance System" class="input" />
+        <label>{{ t('form.projectName') }}</label>
+        <input v-model="newProjectName" type="text" :placeholder="t('form.projectNamePlaceholder')" class="input" />
       </div>
        <div class="form-item">
-        <label>Description</label>
-        <input v-model="newProjectDesc" type="text" placeholder="Short description" class="input" />
+        <label>{{ t('form.description') }}</label>
+        <input v-model="newProjectDesc" type="text" :placeholder="t('form.descPlaceholder')" class="input" />
       </div>
     </Modal>
   </div>
@@ -125,20 +142,28 @@ const getInitials = (p: Project) => {
   color: white;
 }
 
+.section-label {
+  padding: 12px 16px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
 .projects-list {
     flex: 1;
     overflow-y: auto;
-    padding: 10px 0;
+    padding-bottom: 8px;
 }
 
 .project-item {
-  padding: 12px 16px;
+  padding: 10px 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
   transition: all 0.2s;
-  border-left: 3px solid transparent;
 }
 
 .project-item:hover {
@@ -146,8 +171,7 @@ const getInitials = (p: Project) => {
 }
 
 .project-item.active {
-  background: #2a2a2a;
-  border-left-color: var(--color-primary);
+  background: rgba(24, 144, 255, 0.1);
 }
 
 .project-icon {
@@ -190,31 +214,47 @@ const getInitials = (p: Project) => {
     text-overflow: ellipsis;
 }
 
-.add-btn {
-  margin: 16px;
-  padding: 12px;
-  background: #2a2a2a;
-  border: 1px dashed #444;
-  color: #aaa;
-  border-radius: 6px;
+.add-btn-inline {
+  padding: 8px 16px;
+  color: #666;
   cursor: pointer;
   font-size: 13px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 6px;
   transition: all 0.2s;
 }
 
-.add-btn:hover {
-  border-color: var(--color-primary);
+.add-btn-inline:hover {
   color: var(--color-primary);
-  background: #333;
+  background: #2a2a2a;
 }
 
 .plus-icon {
     font-size: 16px;
     font-weight: bold;
+}
+
+.settings-item {
+  border-top: 1px solid #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #aaa;
+  transition: all 0.2s;
+}
+
+.settings-item:hover {
+  background: #2a2a2a;
+  color: #eee;
+}
+
+.settings-item.active {
+  background: #2a2a2a;
+  color: #fff;
 }
 
 .form-item {

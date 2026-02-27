@@ -18,9 +18,9 @@ const statusClass = (status: string) => {
 
 const statusLabel = (status: string) => {
   switch (status) {
-    case 'ok': return 'OK';
-    case 'error': return 'ERROR';
-    default: return 'PENDING';
+    case 'ok': return t('status.ok');
+    case 'error': return t('status.error');
+    default: return t('status.pending');
   }
 };
 </script>

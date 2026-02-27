@@ -18,7 +18,8 @@ import {
   ref,
   shallowRef,
   watch
-} from "./chunk-IJL6J2UP.js";
+} from "./chunk-Y2IWDNWC.js";
+import "./chunk-PZ5AY32C.js";
 
 // node_modules/.deno/@intlify+shared@9.14.5/node_modules/@intlify/shared/dist/shared.mjs
 function warn(msg, err) {
@@ -1071,7 +1072,6 @@ function fromEscapeSequence(match, codePoint4, codePoint6) {
   switch (match) {
     case `\\\\`:
       return `\\`;
-    // eslint-disable-next-line no-useless-escape
     case `\\'`:
       return `'`;
     default: {
@@ -2117,33 +2117,21 @@ function getPathCharType(ch) {
   const code3 = ch.charCodeAt(0);
   switch (code3) {
     case 91:
-    // [
     case 93:
-    // ]
     case 46:
-    // .
     case 34:
-    // "
     case 39:
       return ch;
     case 95:
-    // _
     case 36:
-    // $
     case 45:
       return "i";
     case 9:
-    // Tab (HT)
     case 10:
-    // Newline (LF)
     case 13:
-    // Return (CR)
     case 160:
-    // No-break space (NBSP)
     case 65279:
-    // Byte Order Mark (BOM)
     case 8232:
-    // Line Separator (LS)
     case 8233:
       return "w";
   }
@@ -2896,7 +2884,7 @@ function compile(message, context) {
   } else {
     if (!isMessageAST(message)) {
       warn(`the message that is resolve with key '${context.key}' is not supported for jit compilation`);
-      return (() => message);
+      return () => message;
     }
     const cacheKey = message.cacheKey;
     if (cacheKey) {
@@ -3070,7 +3058,7 @@ function compileMessageFormat(context, key, targetLocale, format4, cacheBaseKey,
     return msg2;
   }
   if (messageCompiler == null) {
-    const msg2 = (() => format4);
+    const msg2 = () => format4;
     msg2.locale = targetLocale;
     msg2.key = key;
     return msg2;
@@ -3785,9 +3773,9 @@ var NOOP_RETURN_ARRAY = () => [];
 var NOOP_RETURN_FALSE = () => false;
 var composerID = 0;
 function defineCoreMissingHandler(missing) {
-  return ((ctx, locale, key, type) => {
+  return (ctx, locale, key, type) => {
     return missing(locale, key, getCurrentInstance() || void 0, type);
-  });
+  };
 }
 var getMetaInfo = () => {
   const instance = getCurrentInstance();
@@ -5932,4 +5920,34 @@ export {
   useI18n,
   vTDirective
 };
+/*! Bundled license information:
+
+@intlify/shared/dist/shared.mjs:
+  (*!
+    * shared v9.14.5
+    * (c) 2025 kazuya kawaguchi
+    * Released under the MIT License.
+    *)
+
+@intlify/message-compiler/dist/message-compiler.esm-browser.js:
+  (*!
+    * message-compiler v9.14.5
+    * (c) 2025 kazuya kawaguchi
+    * Released under the MIT License.
+    *)
+
+@intlify/core-base/dist/core-base.mjs:
+  (*!
+    * core-base v9.14.5
+    * (c) 2025 kazuya kawaguchi
+    * Released under the MIT License.
+    *)
+
+vue-i18n/dist/vue-i18n.mjs:
+  (*!
+    * vue-i18n v9.14.5
+    * (c) 2025 kazuya kawaguchi
+    * Released under the MIT License.
+    *)
+*/
 //# sourceMappingURL=vue-i18n.js.map
