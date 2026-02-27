@@ -123,7 +123,7 @@ const getEventStatusClass = (event: { flow?: { name: string; status: 'ok' | 'err
         {{ t('flow.backToDashboard') }}
       </button>
       <h1 class="page-title">{{ t(monitor.nameKey) }}</h1>
-      <span v-if="monitor.status === 'error'" class="error-badge">{{ t('status.error') }}</span>
+      <span v-if="monitor.status === 'error' || monitor.status === 'stopped'" class="error-badge">{{ t('status.error') }}</span>
     </div>
 
     <!-- Metrics Summary -->
@@ -398,9 +398,13 @@ const getEventStatusClass = (event: { flow?: { name: string; status: 'ok' | 'err
   font-weight: 600;
 }
 
-.history-block.ok { background: var(--color-success); }
-.history-block.error { background: var(--color-error); }
+.history-block.ok,
+.history-block.on,
+.history-block.running { background: var(--color-success); }
+.history-block.error,
+.history-block.stopped { background: var(--color-error); }
 .history-block.slow { background: var(--color-warning); }
+.history-block.off { background: #d9d9d9; }
 
 /* Hint */
 .hint {

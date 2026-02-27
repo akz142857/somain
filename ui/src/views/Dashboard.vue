@@ -5,18 +5,26 @@ import MonitorCard from '../components/MonitorCard.vue';
 import { useMockService } from '../services/mockService';
 import { useProject } from '../composables/useProject';
 import { useSearch } from '../composables/useSearch';
-import type { Monitor } from '../services/mockData';
+import type { Monitor, MonitorCategory } from '../services/mockData';
 
 const { t } = useI18n();
-const { getInfrastructure, getBusiness, getProjects, startSimulation, stopSimulation } = useMockService();
+const { getMonitors, getProjects, startSimulation, stopSimulation } = useMockService();
 const { activeProjectId, activeProjectCode: projectCode } = useProject();
 const { searchQuery } = useSearch();
 
-const infrastructureMonitors = ref<Monitor[]>([]);
-const businessMonitors = ref<Monitor[]>([]);
+const allMonitors = ref<Monitor[]>([]);
 const isLoading = ref(true);
 
 const expandedMonitorId = ref<string | null>(null);
+
+const categoryOrder: MonitorCategory[] = ['infrastructure', 'service', 'switch', 'business'];
+
+const categoryLabelKey: Record<MonitorCategory, string> = {
+  infrastructure: 'section.infrastructure',
+  service: 'section.service',
+  switch: 'section.switch',
+  business: 'section.businessFlow'
+};
 
 const filterMonitors = (monitors: Monitor[]) => {
   if (!searchQuery.value) return monitors;
@@ -28,19 +36,23 @@ const filterMonitors = (monitors: Monitor[]) => {
   );
 };
 
-const filteredInfra = computed(() => filterMonitors(infrastructureMonitors.value));
-const filteredBusiness = computed(() => filterMonitors(businessMonitors.value));
+const groupedMonitors = computed(() => {
+  const filtered = filterMonitors(allMonitors.value);
+  const groups = new Map<MonitorCategory, Monitor[]>();
+  for (const m of filtered) {
+    const cat = m.category || 'infrastructure';
+    if (!groups.has(cat)) groups.set(cat, []);
+    groups.get(cat)!.push(m);
+  }
+  return groups;
+});
 
 const fetchData = async () => {
     isLoading.value = true;
-    infrastructureMonitors.value = [];
-    businessMonitors.value = [];
-    
-    const infra = await getInfrastructure(activeProjectId.value);
-    const bus = await getBusiness(activeProjectId.value);
-    
-    infrastructureMonitors.value = infra.value;
-    businessMonitors.value = bus.value;
+    allMonitors.value = [];
+
+    const monitors = await getMonitors(activeProjectId.value);
+    allMonitors.value = monitors.value;
     isLoading.value = false;
 };
 
@@ -75,79 +87,55 @@ watch(activeProjectId, async (newId) => {
 </script>
 
 <template>
-  <div class="monitor-group">
+  <!-- Skeleton Loading -->
+  <div v-if="isLoading" class="monitor-group">
     <div class="group-header">
       <div class="group-title">
-        <span>{{ t('section.infrastructure') }}</span>
-        <span class="group-count">({{ isLoading ? '...' : filteredInfra.length }})</span>
-      </div>
-    </div>
-
-    <div class="monitor-grid">
-      <!-- Skeleton Loading -->
-      <template v-if="isLoading">
-        <div v-for="i in 3" :key="'skel-infra-'+i" class="skeleton-card">
-           <div class="skeleton-header">
-               <div class="skeleton-icon"></div>
-               <div class="skeleton-title"></div>
-               <div class="skeleton-status"></div>
-           </div>
-           <div class="skeleton-body">
-               <div class="skeleton-line"></div>
-               <div class="skeleton-line short"></div>
-           </div>
-        </div>
-      </template>
-
-      <MonitorCard
-        v-if="!isLoading"
-        v-for="m in filteredInfra"
-        :key="m.id"
-        class="monitor-item"
-        :class="{ 'expanded': expandedMonitorId === m.id }"
-        :monitor="m as any"
-        :is-expanded="expandedMonitorId === m.id"
-        @toggle="handleToggleMonitor(m.id)"
-      />
-    </div>
-  </div>
-
-  <div class="monitor-group">
-     <div class="group-header">
-      <div class="group-title">
-        <span>{{ t('section.businessFlow') }}</span>
-        <span class="group-count">({{ isLoading ? '...' : filteredBusiness.length }})</span>
+        <div class="skeleton-title-block"></div>
       </div>
     </div>
     <div class="monitor-grid">
-       <!-- Skeleton Loading -->
-      <template v-if="isLoading">
-        <div v-for="i in 2" :key="'skel-bus-'+i" class="skeleton-card">
-           <div class="skeleton-header">
-               <div class="skeleton-icon"></div>
-               <div class="skeleton-title"></div>
-               <div class="skeleton-status"></div>
-           </div>
-           <div class="skeleton-body">
-               <div class="skeleton-line"></div>
-               <div class="skeleton-line short"></div>
-           </div>
-        </div>
-      </template>
-
-      <MonitorCard
-        v-if="!isLoading"
-        v-for="m in filteredBusiness"
-        :key="m.id"
-        class="monitor-item"
-        :class="{ 'expanded': expandedMonitorId === m.id }"
-        :monitor="m as any"
-        :is-expanded="expandedMonitorId === m.id"
-        @toggle="handleToggleMonitor(m.id)"
-      />
+      <div v-for="i in 3" :key="'skel-'+i" class="skeleton-card">
+         <div class="skeleton-header">
+             <div class="skeleton-icon"></div>
+             <div class="skeleton-title"></div>
+             <div class="skeleton-status"></div>
+         </div>
+         <div class="skeleton-body">
+             <div class="skeleton-line"></div>
+             <div class="skeleton-line short"></div>
+         </div>
+      </div>
     </div>
   </div>
 
+  <template v-else>
+    <div
+      v-for="cat in categoryOrder"
+      :key="cat"
+      class="monitor-group"
+      v-show="groupedMonitors.has(cat)"
+    >
+      <div class="group-header">
+        <div class="group-title">
+          <span>{{ t(categoryLabelKey[cat]) }}</span>
+          <span class="group-count">({{ groupedMonitors.get(cat)?.length ?? 0 }})</span>
+        </div>
+      </div>
+
+      <div class="monitor-grid">
+        <MonitorCard
+          v-for="m in groupedMonitors.get(cat)"
+          :key="m.id"
+          class="monitor-item"
+          :class="{ 'expanded': expandedMonitorId === m.id }"
+          :monitor="m as any"
+          :is-expanded="expandedMonitorId === m.id"
+          @toggle="handleToggleMonitor(m.id)"
+        />
+      </div>
+    </div>
+  </template>
 </template>
 
 <style scoped>
@@ -219,6 +207,14 @@ watch(activeProjectId, async (newId) => {
 .skeleton-title {
     flex: 1;
     height: 16px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-title-block {
+    width: 120px;
+    height: 18px;
     background: #f0f0f0;
     border-radius: 4px;
     animation: skeleton-pulse 1.5s infinite ease-in-out;

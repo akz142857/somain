@@ -8,7 +8,7 @@ const props = defineProps<{
   visible: boolean;
   rule?: AlertRule | null;
   channels: AlertChannel[];
-  monitors: { id: string; name: string; nameKey: string }[];
+  monitors: { id: string; name: string; nameKey: string; metricKeys?: string[] }[];
 }>();
 
 const emit = defineEmits<{
@@ -58,7 +58,22 @@ watch(() => props.visible, (v) => {
   monitorSearch.value = '';
 });
 
-const metricOptions = ['latency', 'uptime', 'successRate', 'avgDuration', 'throughput', 'errorRate'];
+const defaultMetricOptions = ['latency', 'uptime', 'successRate', 'avgDuration', 'throughput', 'errorRate'];
+
+const metricOptions = computed(() => {
+  if (form.value.monitorId) {
+    const monitor = props.monitors.find(m => m.id === form.value.monitorId);
+    if (monitor?.metricKeys?.length) return monitor.metricKeys;
+  }
+  return defaultMetricOptions;
+});
+
+watch(() => form.value.monitorId, () => {
+  // Reset metric key when monitor changes if current selection is not in new options
+  if (!metricOptions.value.includes(form.value.metricKey)) {
+    form.value.metricKey = metricOptions.value[0] || 'latency';
+  }
+});
 const operatorOptions: AlertRule['operator'][] = ['>', '<', '>=', '<=', '=='];
 const severityOptions: AlertSeverity[] = ['critical', 'warning', 'info'];
 

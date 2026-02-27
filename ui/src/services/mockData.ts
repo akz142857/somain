@@ -1,3 +1,6 @@
+export type MonitorStatus = 'ok' | 'error' | 'slow' | 'running' | 'stopped' | 'on' | 'off';
+export type MonitorCategory = 'infrastructure' | 'service' | 'switch' | 'business';
+
 export interface Project {
     id: string;
     code: string; // URL-friendly slug
@@ -10,12 +13,15 @@ export interface Project {
 export const initialProjects: Project[] = [
     { id: '1', code: 'ecommerce', nameKey: 'project.ecommerce', status: 'error' },
     { id: '2', code: 'payment', nameKey: 'project.payment', status: 'ok' },
-    { id: '3', code: 'user-center', nameKey: 'project.user', status: 'warning' }
+    { id: '3', code: 'user-center', nameKey: 'project.user', status: 'warning' },
+    { id: '4', code: 'production', nameKey: 'project.production', status: 'warning' }
 ];
 
 export interface MonitorMetric {
     labelKey: string;
     value: string;
+    numericValue?: number;
+    unit?: string;
     status?: 'good' | 'bad';
 }
 
@@ -56,10 +62,11 @@ export interface Monitor {
     nameKey: string;
     name?: string; // Manual name (used when nameKey is empty)
     desc: string;
-    status: 'ok' | 'error' | 'slow';
-    type: 'api' | 'mq' | 'search' | 'order' | 'db' | 'cache';
+    status: MonitorStatus;
+    type: string;
+    category?: MonitorCategory;
     metrics: MonitorMetric[];
-    history: ('ok' | 'error' | 'slow')[];
+    history: MonitorStatus[];
     events?: MonitorEvent[];
     agent?: MonitorAgent;
     flowSteps?: FlowStepDetail[];
@@ -74,6 +81,7 @@ export const initialInfrastructure: Monitor[] = [
         desc: 'https://api.example.com',
         status: 'ok',
         type: 'api',
+        category: 'infrastructure',
         metrics: [
             { labelKey: 'metric.uptime', value: '99.9%', status: 'good' },
             { labelKey: 'metric.latency', value: '45ms' }
@@ -90,6 +98,7 @@ export const initialInfrastructure: Monitor[] = [
         desc: '192.168.1.102:5672',
         status: 'error',
         type: 'mq',
+        category: 'infrastructure',
         metrics: [
             { labelKey: 'metric.uptime', value: '20%', status: 'bad' },
             { labelKey: 'metric.latency', value: 'value.timeout', status: 'bad' }
@@ -117,6 +126,7 @@ export const initialInfrastructure: Monitor[] = [
         desc: '192.168.1.103:9200',
         status: 'slow',
         type: 'search',
+        category: 'infrastructure',
         metrics: [
             { labelKey: 'metric.uptime', value: '100%', status: 'good' },
             { labelKey: 'metric.latency', value: '850ms', status: 'bad' }
@@ -264,6 +274,36 @@ export const initialAlertRules: AlertRule[] = [
         channelIds: ['ch-2'],
         createdAt: '2026-02-22T09:00:00Z',
         updatedAt: '2026-02-22T09:00:00Z'
+    },
+    {
+        id: 'rule-5',
+        name: 'MQ Queue Depth High',
+        monitorId: 'mq-backlog',
+        monitorName: 'MQ Backlog',
+        metricKey: 'queueDepth',
+        operator: '>',
+        threshold: 5000,
+        unit: 'count',
+        severity: 'critical',
+        status: 'enabled',
+        channelIds: ['ch-1', 'ch-2'],
+        createdAt: '2026-02-26T09:00:00Z',
+        updatedAt: '2026-02-26T09:00:00Z'
+    },
+    {
+        id: 'rule-6',
+        name: 'ECS Running Count Low',
+        monitorId: 'ecs-tasks',
+        monitorName: 'ECS Tasks',
+        metricKey: 'runningCount',
+        operator: '<',
+        threshold: 3,
+        unit: 'count',
+        severity: 'critical',
+        status: 'enabled',
+        channelIds: ['ch-1'],
+        createdAt: '2026-02-26T10:00:00Z',
+        updatedAt: '2026-02-26T10:00:00Z'
     }
 ];
 
@@ -340,6 +380,32 @@ export const initialAlertEvents: AlertEvent[] = [
         threshold: 500,
         firedAt: '2026-02-27T11:00:00Z',
         resolvedAt: '2026-02-27T11:20:00Z'
+    },
+    {
+        id: 'evt-5',
+        ruleId: 'rule-5',
+        ruleName: 'MQ Queue Depth High',
+        monitorId: 'mq-backlog',
+        monitorName: 'MQ Backlog',
+        severity: 'critical',
+        status: 'firing',
+        message: 'MQ queue depth at 12,450, above threshold 5,000',
+        value: 12450,
+        threshold: 5000,
+        firedAt: '2026-02-27T14:15:00Z'
+    },
+    {
+        id: 'evt-6',
+        ruleId: 'rule-6',
+        ruleName: 'ECS Running Count Low',
+        monitorId: 'ecs-tasks',
+        monitorName: 'ECS Tasks',
+        severity: 'critical',
+        status: 'firing',
+        message: 'ECS running count at 2, below threshold 3',
+        value: 2,
+        threshold: 3,
+        firedAt: '2026-02-27T14:12:00Z'
     }
 ];
 
@@ -351,6 +417,7 @@ export const initialBusiness: Monitor[] = [
         desc: 'Create → Stock → Pay → Callback',
         status: 'error',
         type: 'order',
+        category: 'business',
         metrics: [
             { labelKey: 'metric.successRate', value: '87%', status: 'bad' },
             { labelKey: 'metric.avgDuration', value: '1.8s' }
@@ -555,5 +622,136 @@ export const initialBusiness: Monitor[] = [
                 desc: 'External Payment Provider latency (12.5s).'
             }
         }
+    }
+];
+
+export const initialProductionMonitors: Monitor[] = [
+    {
+        id: 'mq-backlog',
+        projectId: '4',
+        nameKey: 'monitor.mqBacklog',
+        desc: 'order.created / order.payment',
+        status: 'error',
+        type: 'mq',
+        category: 'infrastructure',
+        metrics: [
+            { labelKey: 'metric.queueDepth', value: '12,450', numericValue: 12450, unit: 'count', status: 'bad' },
+            { labelKey: 'metric.consumerCount', value: '3', numericValue: 3, unit: 'count' },
+            { labelKey: 'metric.publishRate', value: '850/s', numericValue: 850, unit: 'count' },
+            { labelKey: 'metric.consumeRate', value: '120/s', numericValue: 120, unit: 'count', status: 'bad' }
+        ],
+        history: ['ok', 'ok', 'ok', 'slow', 'slow', 'error', 'error', 'error', 'error', 'error'],
+        events: [
+            { time: 'Just now', msg: 'Queue depth exceeded 10,000 threshold' },
+            { time: '2m ago', msg: 'Consumer lag increasing: 850/s publish vs 120/s consume' },
+            { time: '5m ago', msg: 'Consumer group rebalancing detected' }
+        ],
+        agent: {
+            steps: [
+                { title: 'Checking Consumer Health', desc: 'Consumer group has 3 active consumers, expected 8.' },
+                { title: 'Analyzing Message Rate', desc: 'Publish rate 850/s far exceeds consume rate 120/s.' }
+            ],
+            rootCause: {
+                title: 'Root Cause',
+                desc: '5 of 8 consumers crashed due to OOM. Remaining 3 consumers cannot keep up with publish rate.',
+                confidence: '93% Confidence'
+            }
+        }
+    },
+    {
+        id: 'ecs-tasks',
+        projectId: '4',
+        nameKey: 'monitor.ecsTasks',
+        desc: 'order-processor-service',
+        status: 'error',
+        type: 'ecs',
+        category: 'infrastructure',
+        metrics: [
+            { labelKey: 'metric.runningCount', value: '2', numericValue: 2, unit: 'count', status: 'bad' },
+            { labelKey: 'metric.desiredCount', value: '5', numericValue: 5, unit: 'count' },
+            { labelKey: 'metric.serviceStatus', value: 'DRAINING', status: 'bad' }
+        ],
+        history: ['ok', 'ok', 'ok', 'ok', 'slow', 'error', 'error', 'error', 'error', 'error'],
+        events: [
+            { time: 'Just now', msg: 'Service status changed to DRAINING' },
+            { time: '1m ago', msg: 'Task arn:ecs:task/abc123 stopped: OOMKilled' },
+            { time: '2m ago', msg: 'Task arn:ecs:task/def456 stopped: OOMKilled' },
+            { time: '3m ago', msg: 'Task arn:ecs:task/ghi789 stopped: OOMKilled' }
+        ],
+        agent: {
+            steps: [
+                { title: 'Checking Task Status', desc: '3 tasks terminated with OOMKilled exit code.' },
+                { title: 'Analyzing Memory', desc: 'Container memory limit 512MB, peak usage 510MB before crash.' }
+            ],
+            rootCause: {
+                title: 'Root Cause',
+                desc: 'Memory limit too low (512MB) for current workload. Tasks OOMKilled under message backlog pressure.',
+                confidence: '91% Confidence'
+            }
+        }
+    },
+    {
+        id: 'crawler-browsers',
+        projectId: '4',
+        nameKey: 'monitor.crawlerBrowsers',
+        desc: 'headless-chrome-pool',
+        status: 'slow',
+        type: 'crawler',
+        category: 'service',
+        metrics: [
+            { labelKey: 'metric.activeBrowsers', value: '18', numericValue: 18, unit: 'count' },
+            { labelKey: 'metric.taskQueueSize', value: '342', numericValue: 342, unit: 'count', status: 'bad' },
+            { labelKey: 'metric.pageLoadTime', value: '4.2s', numericValue: 4200, unit: 'ms', status: 'bad' }
+        ],
+        history: ['ok', 'ok', 'slow', 'ok', 'slow', 'slow', 'ok', 'slow', 'slow', 'slow'],
+        events: [
+            { time: 'Just now', msg: 'Average page load time exceeded 4s threshold' },
+            { time: '1m ago', msg: 'Task queue growing: 342 pending tasks' },
+            { time: '3m ago', msg: 'Browser instance #12 recycled: memory leak detected' }
+        ],
+        agent: {
+            rootCause: {
+                title: 'Observation',
+                desc: 'Browser pool saturated with 18/20 active instances. Task queue backlog at 342. Possible target site rate limiting.',
+            }
+        }
+    },
+    {
+        id: 'flash-sale-switch',
+        projectId: '4',
+        nameKey: 'monitor.flashSaleSwitch',
+        desc: 'flash-sale-2026-spring',
+        status: 'on',
+        type: 'switch',
+        category: 'switch',
+        metrics: [
+            { labelKey: 'metric.switchState', value: 'ON', status: 'good' },
+            { labelKey: 'metric.lastToggled', value: '14:00 today' },
+            { labelKey: 'metric.toggledBy', value: 'ops-admin' }
+        ],
+        history: ['off', 'off', 'off', 'off', 'off', 'off', 'off', 'on', 'on', 'on'],
+        events: [
+            { time: '14:00', msg: 'Switch toggled ON by ops-admin' },
+            { time: '10:00', msg: 'Switch pre-check passed: inventory confirmed' }
+        ]
+    },
+    {
+        id: 'ai-chatbot',
+        projectId: '4',
+        nameKey: 'monitor.aiChatbot',
+        desc: 'customer-service-bot',
+        status: 'ok',
+        type: 'chatbot',
+        category: 'service',
+        metrics: [
+            { labelKey: 'metric.activeSessions', value: '156', numericValue: 156, unit: 'count', status: 'good' },
+            { labelKey: 'metric.responseTime', value: '1.8s', numericValue: 1800, unit: 'ms' },
+            { labelKey: 'metric.serviceStatus', value: 'HEALTHY', status: 'good' }
+        ],
+        history: ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok'],
+        events: [
+            { time: 'Just now', msg: 'Health check passed: all models loaded' },
+            { time: '5m ago', msg: '156 active sessions, avg response 1.8s' }
+        ]
     }
 ];

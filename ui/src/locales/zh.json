@@ -5,7 +5,8 @@
     "project": {
         "ecommerce": "电商主站",
         "payment": "支付系统",
-        "user": "用户中心"
+        "user": "用户中心",
+        "production": "生产系统"
     },
     "agent": {
         "placeholder": "随便问点什么...",
@@ -30,7 +31,11 @@
         "error": "异常",
         "slow": "慢响应",
         "ok": "正常",
-        "pending": "等待中"
+        "pending": "等待中",
+        "running": "运行中",
+        "stopped": "已停止",
+        "on": "开启",
+        "off": "关闭"
     },
     "tab": {
         "events": "最近事件",
@@ -47,20 +52,42 @@
         "avgDuration": "平均耗时",
         "failures": "失败次数",
         "throughput": "吞吐量",
-        "errorRate": "错误率"
+        "errorRate": "错误率",
+        "queueDepth": "队列深度",
+        "consumerCount": "消费者数",
+        "publishRate": "发布速率",
+        "consumeRate": "消费速率",
+        "runningCount": "运行数",
+        "desiredCount": "期望数",
+        "serviceStatus": "服务状态",
+        "activeBrowsers": "活跃浏览器",
+        "taskQueueSize": "任务队列",
+        "pageLoadTime": "页面加载",
+        "switchState": "状态",
+        "lastToggled": "上次切换",
+        "toggledBy": "操作人",
+        "activeSessions": "活跃会话",
+        "responseTime": "响应时间"
     },
     "value": {
         "timeout": "超时"
     },
     "section": {
         "infrastructure": "基础设施",
-        "businessFlow": "业务流程"
+        "businessFlow": "业务流程",
+        "service": "服务",
+        "switch": "功能开关"
     },
     "monitor": {
         "apiGateway": "API 网关",
         "rabbitmq": "RabbitMQ",
         "elasticsearch": "ElasticSearch",
-        "orderFlow": "订单流程"
+        "orderFlow": "订单流程",
+        "mqBacklog": "MQ消息积压",
+        "ecsTasks": "ECS任务",
+        "crawlerBrowsers": "爬虫浏览器",
+        "flashSaleSwitch": "秒杀开关",
+        "aiChatbot": "AI客服"
     },
     "flow": {
         "backToDashboard": "返回仪表盘",

@@ -1,11 +1,12 @@
-import { ref, reactive } from 'vue';
-import { initialInfrastructure, initialBusiness, initialProjects, initialAlertRules, initialAlertChannels, initialAlertEvents, type Monitor, type Project, type AlertRule, type AlertChannel, type AlertEvent, type LogEntry, type LogLevel, type MetricSeries, type TimeSeriesPoint } from './mockData';
+import { ref, computed } from 'vue';
+import { initialInfrastructure, initialBusiness, initialProjects, initialProductionMonitors, initialAlertRules, initialAlertChannels, initialAlertEvents, type Monitor, type Project, type AlertRule, type AlertChannel, type AlertEvent, type LogEntry, type LogLevel, type MetricSeries, type TimeSeriesPoint, type MonitorStatus } from './mockData';
 
 // State is reactive to be shared if needed, or we can just return refs
 // For simplicity in simulation, we'll keep a local state and expose it
 const projectsForSim = ref<Project[]>(JSON.parse(JSON.stringify(initialProjects)));
-const infrastructureForSim = ref<Monitor[]>(JSON.parse(JSON.stringify(initialInfrastructure)));
-const businessForSim = ref<Monitor[]>(JSON.parse(JSON.stringify(initialBusiness)));
+const monitorsForSim = ref<Monitor[]>(JSON.parse(JSON.stringify([...initialInfrastructure, ...initialBusiness, ...initialProductionMonitors])));
+const infrastructureForSim = computed(() => monitorsForSim.value.filter(m => m.category === 'infrastructure' || (!m.category && ['api', 'mq', 'search', 'db', 'cache'].includes(m.type))));
+const businessForSim = computed(() => monitorsForSim.value.filter(m => m.category === 'business' || (!m.category && m.type === 'order')));
 
 const alertRulesForSim = ref<AlertRule[]>(JSON.parse(JSON.stringify(initialAlertRules)));
 const alertChannelsForSim = ref<AlertChannel[]>(JSON.parse(JSON.stringify(initialAlertChannels)));
@@ -13,7 +14,7 @@ const alertEventsForSim = ref<AlertEvent[]>(JSON.parse(JSON.stringify(initialAle
 
 let intervalId: number | null = null;
 
-const randomStatus = (): 'ok' | 'error' | 'slow' => {
+const randomStatus = (): MonitorStatus => {
     const rand = Math.random();
     if (rand > 0.9) return 'error';
     if (rand > 0.8) return 'slow';
@@ -25,9 +26,18 @@ const randomLatency = (base: number) => {
 };
 
 const simulateUpdates = () => {
-    // Infrastructure updates
-    infrastructureForSim.value.forEach(m => {
-        // Randomly update status occasionally
+    monitorsForSim.value.forEach(m => {
+        // Switch type: 5% chance to toggle on/off
+        if (m.type === 'switch') {
+            if (Math.random() > 0.95) {
+                m.status = m.status === 'on' ? 'off' : 'on';
+                m.history.shift();
+                m.history.push(m.status);
+            }
+            return;
+        }
+
+        // Regular monitors
         if (Math.random() > 0.7) {
             const newStatus = randomStatus();
             m.status = newStatus;
@@ -52,41 +62,36 @@ const simulateUpdates = () => {
             }
         }
     });
-
-    // Business logic simulation
-    businessForSim.value.forEach(m => {
-        if (Math.random() > 0.8) {
-            const newStatus = randomStatus();
-            m.status = newStatus;
-            m.history.shift();
-            m.history.push(newStatus);
-        }
-    });
 };
 
 export const getMonitorIdsForProject = (projectId: string): Set<string> => {
     const ids = new Set<string>();
-    for (const m of infrastructureForSim.value) {
-        if (m.projectId === projectId) ids.add(m.id);
-    }
-    for (const m of businessForSim.value) {
+    for (const m of monitorsForSim.value) {
         if (m.projectId === projectId) ids.add(m.id);
     }
     return ids;
 };
 
-export const getMonitorsForProject = (projectId: string): { id: string; name: string; nameKey: string }[] => {
-    const result: { id: string; name: string; nameKey: string }[] = [];
-    for (const m of infrastructureForSim.value) {
-        if (m.projectId === projectId) result.push({ id: m.id, name: m.name || m.nameKey || m.id, nameKey: m.nameKey });
-    }
-    for (const m of businessForSim.value) {
-        if (m.projectId === projectId) result.push({ id: m.id, name: m.name || m.nameKey || m.id, nameKey: m.nameKey });
+export const getMonitorsForProject = (projectId: string): { id: string; name: string; nameKey: string; metricKeys?: string[] }[] => {
+    const result: { id: string; name: string; nameKey: string; metricKeys?: string[] }[] = [];
+    for (const m of monitorsForSim.value) {
+        if (m.projectId === projectId) {
+            const metricKeys = m.metrics.map(met => {
+                const key = met.labelKey.replace('metric.', '');
+                return key;
+            });
+            result.push({ id: m.id, name: m.name || m.nameKey || m.id, nameKey: m.nameKey, metricKeys });
+        }
     }
     return result;
 };
 
 export const useMockService = () => {
+    const getMonitors = async (projectId: string) => {
+        await new Promise(r => setTimeout(r, 500));
+        return ref(monitorsForSim.value.filter(m => m.projectId === projectId));
+    };
+
     const getInfrastructure = async (projectId: string) => {
         // Simulate network delay
         await new Promise(r => setTimeout(r, 500));
@@ -148,16 +153,23 @@ export const useMockService = () => {
         return code;
     };
 
-    const addMonitor = async (monitor: Partial<Monitor>, group: 'infrastructure' | 'business', projectId: string) => {
+    const addMonitor = async (monitor: Partial<Monitor>, group: 'infrastructure' | 'business' | 'service' | 'switch', projectId: string) => {
         await new Promise(r => setTimeout(r, 300));
+        const categoryMap: Record<string, Monitor['category']> = {
+            infrastructure: 'infrastructure',
+            business: 'business',
+            service: 'service',
+            switch: 'switch'
+        };
         const newMonitor: Monitor = {
             id: Date.now().toString(),
             projectId,
             nameKey: '',
             name: monitor.name || '',
             desc: monitor.desc || 'No description',
-            status: 'ok',
+            status: group === 'switch' ? 'off' : 'ok',
             type: monitor.type || 'api',
+            category: categoryMap[group],
             metrics: [
                 { labelKey: 'metric.uptime', value: '100%', status: 'good' },
                 { labelKey: 'metric.latency', value: '20ms' }
@@ -166,16 +178,11 @@ export const useMockService = () => {
             ...monitor
         };
 
-        if (group === 'infrastructure') {
-            infrastructureForSim.value.push(newMonitor);
-        } else {
-            businessForSim.value.push(newMonitor);
-        }
+        monitorsForSim.value.push(newMonitor);
     };
 
     const getMonitorById = (id: string): Monitor | undefined => {
-        return infrastructureForSim.value.find(m => m.id === id)
-            || businessForSim.value.find(m => m.id === id);
+        return monitorsForSim.value.find(m => m.id === id);
     };
 
     // Alert Rules CRUD
@@ -326,6 +333,54 @@ export const useMockService = () => {
                 'Master-replica sync completed in 2.1s',
                 'Pub/Sub message delivered to 3 subscribers on channel events',
                 'Memory fragmentation ratio: 1.23'
+            ],
+            ecs: [
+                'Task arn:ecs:task/abc123 status: RUNNING',
+                'Service order-processor desired count updated to 5',
+                'Task stopped: exit code 137 (OOMKilled)',
+                'Container health check passed on port 8080',
+                'Auto-scaling triggered: CPU utilization 85%',
+                'Task placement constraint evaluated: spread across AZs',
+                'Deployment rollout 50% complete',
+                'Service discovery registration updated',
+                'Task definition revision 42 activated',
+                'Container instance i-0abc123 draining'
+            ],
+            crawler: [
+                'Browser instance #5 launched: headless Chrome 120',
+                'Page navigation completed: https://example.com/products (2.1s)',
+                'Screenshot captured for page validation',
+                'Browser recycled after 50 page loads',
+                'Rate limit detected: 429 Too Many Requests',
+                'Proxy rotated to 10.0.5.12:8080',
+                'JavaScript rendering completed in 1.8s',
+                'Cookie consent dialog dismissed',
+                'Data extraction: 245 items scraped from listing page',
+                'Memory leak detected in browser #12: 1.2GB RSS'
+            ],
+            switch: [
+                'Switch state checked: ON',
+                'Toggle request received from ops-admin',
+                'Pre-check validation passed: inventory=15000',
+                'Switch toggled ON at 14:00:00 UTC',
+                'Downstream services notified of state change',
+                'Rate limiter activated: 1000 req/s',
+                'Switch health check passed',
+                'Rollback plan verified: auto-off after 2h',
+                'Monitoring alert threshold updated for flash sale',
+                'Switch audit log entry created'
+            ],
+            chatbot: [
+                'Session started: user-abc123, model=gpt-4',
+                'Response generated in 1.2s, tokens=450',
+                'Knowledge base query: 3 relevant documents found',
+                'Fallback to human agent: confidence below threshold',
+                'Session ended: satisfaction score 4.5/5',
+                'Model inference batch processed: 12 requests',
+                'Context window managed: truncated to 8000 tokens',
+                'Intent classified: order_inquiry (confidence: 0.92)',
+                'Response cached for common query: shipping policy',
+                'Concurrent sessions: 156 active, 12 queued'
             ]
         };
 
@@ -378,7 +433,12 @@ export const useMockService = () => {
             successRate: { base: 92, variance: 8, unit: '%' },
             avgDuration: { base: 1800, variance: 500, unit: 'ms' },
             throughput: { base: 250, variance: 80, unit: 'req/min' },
-            errorRate: { base: 3, variance: 5, unit: '%' }
+            errorRate: { base: 3, variance: 5, unit: '%' },
+            runningCount: { base: 4, variance: 2, unit: 'count' },
+            pageLoadTime: { base: 3000, variance: 1500, unit: 'ms' },
+            responseTime: { base: 1800, variance: 600, unit: 'ms' },
+            activeSessions: { base: 150, variance: 50, unit: 'count' },
+            queueDepth: { base: 5000, variance: 4000, unit: 'count' }
         };
         const config = baseValues[metricKey] || { base: 50, variance: 20, unit: '' };
 
@@ -407,7 +467,11 @@ export const useMockService = () => {
             search: ['latency', 'throughput', 'errorRate'],
             order: ['successRate', 'avgDuration', 'throughput'],
             db: ['latency', 'throughput', 'errorRate'],
-            cache: ['latency', 'throughput', 'errorRate']
+            cache: ['latency', 'throughput', 'errorRate'],
+            ecs: ['runningCount', 'errorRate', 'latency'],
+            crawler: ['pageLoadTime', 'throughput', 'errorRate'],
+            switch: ['throughput', 'errorRate'],
+            chatbot: ['responseTime', 'activeSessions', 'errorRate']
         };
 
         const metrics = metricsByType[type] || metricsByType.api;
@@ -423,6 +487,7 @@ export const useMockService = () => {
     };
 
     return {
+        getMonitors,
         getInfrastructure,
         getBusiness,
         getProjects,

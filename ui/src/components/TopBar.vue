@@ -52,8 +52,8 @@ const handleAddMonitor = async () => {
        nameKey: '',
        name: newMonitor.value.name,
        desc: newMonitor.value.desc || newMonitor.value.name,
-       type: newMonitor.value.type as Monitor['type'],
-   }, newMonitor.value.group as 'infrastructure' | 'business', activeProjectId.value);
+       type: newMonitor.value.type,
+   }, newMonitor.value.group as any, activeProjectId.value);
 
    showAddMonitor.value = false;
    newMonitor.value = { name: '', desc: '', type: 'api', group: 'infrastructure' };
@@ -104,6 +104,10 @@ const handleAddMonitor = async () => {
             <option value="cache">Cache</option>
             <option value="search">Search</option>
             <option value="order">{{ t('section.businessFlow') }}</option>
+            <option value="ecs">ECS</option>
+            <option value="crawler">Crawler</option>
+            <option value="switch">Switch</option>
+            <option value="chatbot">Chatbot</option>
           </select>
         </div>
         <div class="form-item">
@@ -111,6 +115,12 @@ const handleAddMonitor = async () => {
           <div class="radio-group">
             <label class="radio-label">
                 <input type="radio" v-model="newMonitor.group" value="infrastructure" /> {{ t('section.infrastructure') }}
+            </label>
+            <label class="radio-label">
+                <input type="radio" v-model="newMonitor.group" value="service" /> {{ t('section.service') }}
+            </label>
+            <label class="radio-label">
+                <input type="radio" v-model="newMonitor.group" value="switch" /> {{ t('section.switch') }}
             </label>
             <label class="radio-label">
                 <input type="radio" v-model="newMonitor.group" value="business" /> {{ t('section.businessFlow') }}

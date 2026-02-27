@@ -30,8 +30,12 @@ const filteredMonitors = computed(() => {
     list = list.filter(m => m.name.toLowerCase().includes(q) || (m.desc && m.desc.toLowerCase().includes(q)));
   }
   
-  if (filterStatus.value !== 'all') {
-    list = list.filter(m => m.status === filterStatus.value);
+  if (filterStatus.value === 'error') {
+    list = list.filter(m => m.status === 'error' || m.status === 'stopped' || m.status === 'off');
+  } else if (filterStatus.value === 'slow') {
+    list = list.filter(m => m.status === 'slow');
+  } else if (filterStatus.value === 'ok') {
+    list = list.filter(m => m.status === 'ok' || m.status === 'on' || m.status === 'running');
   }
   
   return list;
@@ -80,8 +84,9 @@ const handleSelect = (monitor: MonitorItem) => {
           @click="handleSelect(monitor)"
         >
           <div class="monitor-icon">
-            <span v-if="monitor.status === 'error'">🔴</span>
+            <span v-if="monitor.status === 'error' || monitor.status === 'stopped'">🔴</span>
             <span v-else-if="monitor.status === 'slow'">🟠</span>
+            <span v-else-if="monitor.status === 'off'">⚪</span>
             <span v-else>🟢</span>
           </div>
           <div class="monitor-info">

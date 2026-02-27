@@ -8,7 +8,7 @@ import MonitorSelector from './MonitorSelector.vue';
 
 const { t } = useI18n();
 const { context, messages, sendMessage } = useAgentContext();
-const { getInfrastructure, getBusiness } = useMockService();
+const { getMonitors } = useMockService();
 const { activeProjectId } = useProject();
 
 const inputMessage = ref('');
@@ -30,21 +30,15 @@ const tools = [
 ];
 
 const updateMonitors = async () => {
-  const infra = await getInfrastructure(activeProjectId.value);
-  const bus = await getBusiness(activeProjectId.value);
-  
-  const mapMonitor = (m: any, type: string) => ({
+  const all = await getMonitors(activeProjectId.value);
+
+  monitors.value = all.value.map(m => ({
     id: m.id,
     name: m.name || t(m.nameKey),
-    type,
+    type: m.type,
     status: m.status,
     metric: m.metrics && m.metrics.length > 0 ? m.metrics[0].value : ''
-  });
-
-  monitors.value = [
-    ...infra.value.map(m => mapMonitor(m, 'infra')),
-    ...bus.value.map(m => mapMonitor(m, 'business'))
-  ];
+  }));
 };
 
 onMounted(() => {
@@ -61,9 +55,9 @@ const filteredSuggestions = computed(() => {
   if (suggestionType.value === 'monitor') {
     let list = monitors.value.filter(m => m.name.toLowerCase().includes(query));
     
-    // Sort by priority: error > slow > ok
+    // Sort by priority: error/stopped > slow/off > rest
     list.sort((a, b) => {
-        const score = (s: string) => s === 'error' ? 3 : s === 'slow' ? 2 : 1;
+        const score = (s: string) => (s === 'error' || s === 'stopped') ? 3 : (s === 'slow' || s === 'off') ? 2 : 1;
         return score(b.status) - score(a.status);
     });
     
@@ -238,8 +232,9 @@ const handleRemoveContext = () => {
                 <div class="suggestion-icon">
                     <span v-if="suggestionType === 'tool'">🛠️</span>
                     <span v-else>
-                        <span v-if="(item as any).status === 'error'">🔴</span>
+                        <span v-if="(item as any).status === 'error' || (item as any).status === 'stopped'">🔴</span>
                         <span v-else-if="(item as any).status === 'slow'">🟠</span>
+                        <span v-else-if="(item as any).status === 'off'">⚪</span>
                         <span v-else>🟢</span>
                     </span>
                 </div>

@@ -14,10 +14,10 @@ const props = defineProps<{
     nameKey: string;
     name?: string;
     desc: string;
-    status: 'ok' | 'error' | 'slow';
-    type: 'api' | 'mq' | 'search' | 'order' | 'db' | 'cache';
-    metrics: { labelKey: string; value: string; status?: 'good' | 'bad' }[];
-    history: ('ok' | 'error' | 'slow')[];
+    status: string;
+    type: string;
+    metrics: { labelKey: string; value: string; numericValue?: number; unit?: string; status?: 'good' | 'bad' }[];
+    history: string[];
     events?: { time: string; msg: string; id?: string; flow?: { name: string; status: 'ok' | 'error' }[] }[];
     agent?: {
       steps?: { title: string; desc: string }[];
@@ -38,6 +38,10 @@ const statusText = computed(() => {
     case 'ok': return 'status.normal';
     case 'error': return 'status.error';
     case 'slow': return 'status.slow';
+    case 'running': return 'status.running';
+    case 'stopped': return 'status.stopped';
+    case 'on': return 'status.on';
+    case 'off': return 'status.off';
     default: return 'status.normal';
   }
 });
@@ -57,8 +61,9 @@ const switchTab = (tab: string, event: Event) => {
   <div class="monitor-card" :class="props.monitor.status" @click="toggleDetail">
     <div class="card-header">
       <div class="status-icon">
-         <svg v-if="monitor.status === 'ok'" width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-         <svg v-else-if="monitor.status === 'error'" width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+         <svg v-if="monitor.status === 'ok' || monitor.status === 'on' || monitor.status === 'running'" width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+         <svg v-else-if="monitor.status === 'error' || monitor.status === 'stopped'" width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+         <svg v-else-if="monitor.status === 'off'" width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="10"/></svg>
          <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="10"/></svg>
       </div>
       <div class="card-info">
@@ -183,8 +188,18 @@ const switchTab = (tab: string, event: Event) => {
   border-left: 4px solid var(--color-warning);
 }
 
-.monitor-card.ok {
+.monitor-card.ok,
+.monitor-card.on,
+.monitor-card.running {
   border-left: 4px solid var(--color-success);
+}
+
+.monitor-card.stopped {
+  border-left: 4px solid var(--color-error);
+}
+
+.monitor-card.off {
+  border-left: 4px solid #d9d9d9;
 }
 
 .card-header {
@@ -203,9 +218,13 @@ const switchTab = (tab: string, event: Event) => {
   justify-content: center;
 }
 
-.monitor-card.ok .status-icon { background: var(--color-success); }
-.monitor-card.error .status-icon { background: var(--color-error); }
+.monitor-card.ok .status-icon,
+.monitor-card.on .status-icon,
+.monitor-card.running .status-icon { background: var(--color-success); }
+.monitor-card.error .status-icon,
+.monitor-card.stopped .status-icon { background: var(--color-error); }
 .monitor-card.slow .status-icon { background: var(--color-warning); }
+.monitor-card.off .status-icon { background: #d9d9d9; }
 
 .card-info {
   flex: 1;
@@ -237,9 +256,13 @@ const switchTab = (tab: string, event: Event) => {
   color: #666;
 }
 
-.card-status.ok { color: var(--color-success); background: rgba(82, 196, 26, 0.1); }
-.card-status.error { color: var(--color-error); background: rgba(255, 77, 79, 0.1); }
+.card-status.ok,
+.card-status.on,
+.card-status.running { color: var(--color-success); background: rgba(82, 196, 26, 0.1); }
+.card-status.error,
+.card-status.stopped { color: var(--color-error); background: rgba(255, 77, 79, 0.1); }
 .card-status.slow { color: var(--color-warning); background: rgba(250, 173, 20, 0.1); }
+.card-status.off { color: #999; background: #f0f0f0; }
 
 .metrics {
   display: flex;
@@ -285,9 +308,13 @@ const switchTab = (tab: string, event: Event) => {
   height: 100%;
 }
 
-.spark-bar.ok { background: var(--color-success); }
-.spark-bar.error { background: var(--color-error); }
+.spark-bar.ok,
+.spark-bar.on,
+.spark-bar.running { background: var(--color-success); }
+.spark-bar.error,
+.spark-bar.stopped { background: var(--color-error); }
 .spark-bar.slow { background: var(--color-warning); }
+.spark-bar.off { background: #d9d9d9; }
 
 .card-detail {
   position: absolute;

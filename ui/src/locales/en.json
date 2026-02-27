@@ -5,7 +5,8 @@
     "project": {
         "ecommerce": "E-Commerce",
         "payment": "Payment",
-        "user": "User Center"
+        "user": "User Center",
+        "production": "Production System"
     },
     "agent": {
         "placeholder": "Ask anything...",
@@ -30,7 +31,11 @@
         "error": "Error",
         "slow": "Slow Response",
         "ok": "OK",
-        "pending": "Pending"
+        "pending": "Pending",
+        "running": "Running",
+        "stopped": "Stopped",
+        "on": "ON",
+        "off": "OFF"
     },
     "tab": {
         "events": "Events",
@@ -47,20 +52,42 @@
         "avgDuration": "Avg Duration",
         "failures": "Failures",
         "throughput": "Throughput",
-        "errorRate": "Error Rate"
+        "errorRate": "Error Rate",
+        "queueDepth": "Queue Depth",
+        "consumerCount": "Consumers",
+        "publishRate": "Publish Rate",
+        "consumeRate": "Consume Rate",
+        "runningCount": "Running",
+        "desiredCount": "Desired",
+        "serviceStatus": "Service Status",
+        "activeBrowsers": "Active Browsers",
+        "taskQueueSize": "Task Queue",
+        "pageLoadTime": "Page Load",
+        "switchState": "State",
+        "lastToggled": "Last Toggled",
+        "toggledBy": "Toggled By",
+        "activeSessions": "Active Sessions",
+        "responseTime": "Response Time"
     },
     "value": {
         "timeout": "Timeout"
     },
     "section": {
         "infrastructure": "Infrastructure",
-        "businessFlow": "Business Flow"
+        "businessFlow": "Business Flow",
+        "service": "Services",
+        "switch": "Feature Switches"
     },
     "monitor": {
         "apiGateway": "API Gateway",
         "rabbitmq": "RabbitMQ",
         "elasticsearch": "ElasticSearch",
-        "orderFlow": "Order Flow"
+        "orderFlow": "Order Flow",
+        "mqBacklog": "MQ Backlog",
+        "ecsTasks": "ECS Tasks",
+        "crawlerBrowsers": "Crawler Browsers",
+        "flashSaleSwitch": "Flash Sale Switch",
+        "aiChatbot": "AI Chatbot"
     },
     "flow": {
         "backToDashboard": "Back to Dashboard",
